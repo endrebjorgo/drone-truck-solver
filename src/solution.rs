@@ -10,7 +10,6 @@ pub struct Flight {
 #[derive(Clone, Debug, Default)]
 pub struct Solution {
     pub truck_path: Vec<Node>,
-    pub flights1: Vec<Flight>,
-    pub flights2: Vec<Flight>,
+    pub flights:    Vec<Flight>,
 }
 
