@@ -121,12 +121,10 @@ impl Problem {
     }
 
     fn solution_serves_all_nodes_once(&self, solution: &Solution) -> bool {
-        // collect all nodes that are served in the solution and sort them
         let mut served_nodes = solution.truck_path.clone();
         served_nodes.append(&mut solution.flights.iter().map(|x| x.goal).collect());
         served_nodes.sort();
 
-        // construct the array of nodes we expect to see in a valid solution
         let mut required_nodes = vec![0];
         required_nodes.append(&mut (0..=self.customer_count).collect());
 
@@ -168,6 +166,9 @@ impl Problem {
     }
 
     pub fn calculate_score(&self, solution: &Solution) -> Option<u32> {
+        // TODO: incorporate checks into calculation to avoid redundant loops
+        // specifically the ones that loop
+
         if !self.solution_starts_and_ends_at_depot(solution) {
             return None;
         }
@@ -177,6 +178,10 @@ impl Problem {
         }
 
         if !self.solution_drone_deployments_are_valid(solution) {
+            return None;
+        }
+
+        if !solution.flights_deploy_in_order() {
             return None;
         }
 

@@ -41,7 +41,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "drone2"
+name = "drone-truck-solver"
 version = "0.1.0"
 dependencies = [
  "rand",
