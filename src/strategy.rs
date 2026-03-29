@@ -2,7 +2,8 @@ use crate::operator::Operator;
 use crate::problem::Problem;
 use crate::solution::Solution;
 
-use rand::SeedableRng;
+use rand::{SeedableRng};
+use rand::prelude::IndexedRandom;
 
 pub trait Strategy {
     fn solve(&mut self, problem: &Problem) -> Solution;
@@ -39,9 +40,7 @@ pub struct LocalSearch {
 
 impl LocalSearch {
     pub fn new() -> Self {
-        Self { 
-            operators: Vec::new(),
-        }
+        Self { operators: Vec::new() }
     }
 
     pub fn add_operator(mut self, operator: impl Operator + 'static) -> Self {
@@ -56,17 +55,17 @@ impl Strategy for LocalSearch {
         let mut best_score = problem.calculate_score(&best_solution)
             .expect("ERROR: initial solution unexpectedly unvalid");
         
-        let mut neighbors: Vec<Solution>;
+        let mut neighborhood: Vec<Solution>;
 
         for _ in 0..10_000 {
             let mut did_improve = false;
 
-            neighbors = Vec::new();
+            neighborhood = Vec::new();
             for op in self.operators.iter(){
-                neighbors.append(&mut op.generate_neighbors(&best_solution));
+                neighborhood.append(&mut op.generate_neighborhood(&best_solution));
             }
 
-            for neighbor in neighbors.iter() {
+            for neighbor in neighborhood.iter() {
                 if let Some(score) = problem.calculate_score(neighbor) {
                     if score < best_score {
                         best_solution = neighbor.clone();
@@ -83,3 +82,4 @@ impl Strategy for LocalSearch {
         return best_solution;
     }
 }
+
