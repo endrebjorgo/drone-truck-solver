@@ -2,6 +2,7 @@ use crate::operator::Operator;
 use crate::problem::Problem;
 use crate::solution::Solution;
 
+use std::collections::HashSet;
 use rand::Rng;
 
 pub trait Strategy {
@@ -20,7 +21,6 @@ impl RandomSearch {
 
 impl Strategy for RandomSearch {
     fn solve(&mut self, problem: &Problem) -> (Solution, u32) {
-
         let mut best_solution = problem.generate_initial_solution(); 
         let mut best_score = problem.calculate_score(&best_solution)
             .expect("ERROR: initial solution unexpectedly unvalid");
@@ -57,6 +57,8 @@ impl LocalSearch {
 
 impl Strategy for LocalSearch {
     fn solve(&mut self, problem: &Problem) -> (Solution, u32) {
+        let mut visited: HashSet<Solution> = HashSet::new();
+
         let mut best_solution = problem.generate_initial_solution(); 
         let mut best_score = problem.calculate_score(&best_solution)
             .expect("ERROR: initial solution unexpectedly unvalid");
@@ -72,7 +74,14 @@ impl Strategy for LocalSearch {
             }
 
             for neighbor in neighborhood.iter() {
+                if visited.contains(neighbor) {
+                    continue;
+                } else {
+                    assert_eq!(visited.insert(neighbor.clone()), true);
+                }
+
                 if let Some(score) = problem.calculate_score(neighbor) {
+
                     if score < best_score {
                         best_solution = neighbor.clone();
                         best_score = score;

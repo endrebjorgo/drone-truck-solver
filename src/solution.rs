@@ -1,13 +1,13 @@
 type Node = usize;
 
-#[derive(Clone, Debug, Default)]
+#[derive(Clone, Debug, Default, Eq, Hash, PartialEq)]
 pub struct Flight {
     pub start: Node,
     pub goal:  Node,
     pub end:   Node,
 }
 
-#[derive(Clone, Debug, Default)]
+#[derive(Clone, Debug, Default, Eq, Hash, PartialEq)]
 pub struct Solution {
     pub truck_path: Vec<Node>,
     pub flights:    Vec<Flight>,

@@ -1,6 +1,7 @@
+use drone_truck_solver::operator::{Swap};
 use drone_truck_solver::problem::Problem;
 use drone_truck_solver::solver::Solver;
-use drone_truck_solver::strategy::RandomSearch;
+use drone_truck_solver::strategy::{LocalSearch};
 
 use rand::SeedableRng;
 
@@ -12,10 +13,8 @@ fn main() {
 
         let problem = Problem::from_file(&input_path);
 
-        let rng = rand::rngs::SmallRng::seed_from_u64(69420);
-
         let mut solver = Solver {
-            strategy: RandomSearch::new(rng),
+            strategy: LocalSearch::new().add_operator(Swap),
         };
 
         let (solution, score) = solver.solve(&problem);
