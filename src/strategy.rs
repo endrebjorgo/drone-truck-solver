@@ -2,18 +2,24 @@ use crate::operator::Operator;
 use crate::problem::Problem;
 use crate::solution::Solution;
 
-use rand::{SeedableRng};
-use rand::prelude::IndexedRandom;
+use rand::Rng;
 
 pub trait Strategy {
-    fn solve(&mut self, problem: &Problem) -> Solution;
+    fn solve(&mut self, problem: &Problem) -> (Solution, u32);
 }
 
-pub struct RandomSearch;
+pub struct RandomSearch {
+    rng: Box<dyn Rng>,
+}
+
+impl RandomSearch {
+    pub fn new(rng: impl Rng + 'static) -> Self {
+        Self { rng: Box::new(rng) }
+    }
+}
 
 impl Strategy for RandomSearch {
-    fn solve(&mut self, problem: &Problem) -> Solution {
-        let mut rng = rand::rngs::SmallRng::seed_from_u64(69420);
+    fn solve(&mut self, problem: &Problem) -> (Solution, u32) {
 
         let mut best_solution = problem.generate_initial_solution(); 
         let mut best_score = problem.calculate_score(&best_solution)
@@ -22,7 +28,7 @@ impl Strategy for RandomSearch {
         let mut current_solution;
 
         for _ in 0..10_000 {
-            current_solution = problem.generate_random_solution(&mut rng);
+            current_solution = problem.generate_random_solution(&mut self.rng);
             if let Some(score) = problem.calculate_score(&current_solution) {
                 if score < best_score {
                     best_solution = current_solution;
@@ -30,7 +36,7 @@ impl Strategy for RandomSearch {
                 }
             }
         }
-        return best_solution;
+        return (best_solution, best_score);
     }
 }
 
@@ -50,7 +56,7 @@ impl LocalSearch {
 }
 
 impl Strategy for LocalSearch {
-    fn solve(&mut self, problem: &Problem) -> Solution {
+    fn solve(&mut self, problem: &Problem) -> (Solution, u32) {
         let mut best_solution = problem.generate_initial_solution(); 
         let mut best_score = problem.calculate_score(&best_solution)
             .expect("ERROR: initial solution unexpectedly unvalid");
@@ -76,10 +82,10 @@ impl Strategy for LocalSearch {
             }
 
             if !did_improve {
-                return best_solution;
+                return (best_solution, best_score);
             }
         }
-        return best_solution;
+        return (best_solution, best_score);
     }
 }
 

@@ -7,7 +7,7 @@ pub struct Solver<T: Strategy> {
 }
 
 impl<T: Strategy> Solver<T> {
-    pub fn solve(&mut self, problem: &Problem) -> Solution {
+    pub fn solve(&mut self, problem: &Problem) -> (Solution, u32) {
         return self.strategy.solve(problem);
     }
 }
