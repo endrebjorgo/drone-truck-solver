@@ -14,6 +14,13 @@ pub struct Solution {
 }
 
 impl Solution {
+    pub fn new(truck_path: Vec<Node>, flights: Vec<Flight>) -> Self {
+        Self {
+            truck_path,
+            flights,
+        }
+    }
+
     pub fn to_submission_format(&self) -> String {
         let part1 = self.truck_path.iter()
             .map(|x| x.to_string())
@@ -59,16 +66,15 @@ impl Solution {
 
     fn generate_truck_path_index_lookup(&self) -> Vec<usize> {
         let lookup_length = self.truck_path.len() + self.flights.len();
+        let mut index_lookup = vec![0; lookup_length];
 
-        let mut truck_path_index_lookup = vec![0; lookup_length];
-        for (i, &e) in self.truck_path.iter().enumerate() {
-            truck_path_index_lookup[e] = i;
-        }
-        // swap so that the first element is the index of the first depot and 
-        // the last is the index of the last depot
-        truck_path_index_lookup.swap(0, lookup_length - 1);
+        self.truck_path
+            .iter()
+            .enumerate()
+            .for_each(|(i, &e)| index_lookup[e] = i);
 
-        return truck_path_index_lookup;
+        index_lookup.swap(0, lookup_length - 1);
+        return index_lookup;
     }
 
     pub fn flights_deploy_in_order(&self) -> bool {

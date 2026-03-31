@@ -14,9 +14,11 @@ impl Operator for Swap {
             for j in (i + 1)..(solution.truck_path.len() - 1) {
                 if i == j { continue; }
                 
-                let mut new_neighbor = solution.clone();
-                new_neighbor.truck_path.swap(i, j);
-                neighborhood.push(new_neighbor);
+                let mut new_truck_path = solution.truck_path.clone();
+                new_truck_path.swap(i, j);
+                neighborhood.push(
+                    Solution::new(new_truck_path, solution.flights.clone())
+                );
             }
         }
         return neighborhood;

@@ -3,7 +3,6 @@ use crate::time_matrix::TimeMatrix;
 
 use std::io::{Read};
 use std::fs::{File};
-use std::collections::HashMap;
 use rand::prelude::SliceRandom;
 use rand::RngExt;
 
@@ -83,11 +82,7 @@ impl Problem {
     pub fn generate_initial_solution(&self) -> Solution {
         let mut truck_path: Vec<usize> = (0..=self.customer_count).collect();
         truck_path.push(0);
-
-        Solution {
-            truck_path,
-            flights: Vec::new(),
-        }
+        Solution::new(truck_path, Vec::new())
     }
 
     pub fn generate_random_solution(&self, rng: &mut impl rand::Rng) -> Solution {
@@ -113,7 +108,7 @@ impl Problem {
             flights.push( Flight { start, goal, end });
         }
 
-        Solution { truck_path, flights }
+        Solution::new(truck_path, flights)
     }
 
     fn solution_starts_and_ends_at_depot(&self, solution: &Solution) -> bool {
