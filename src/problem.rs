@@ -3,6 +3,7 @@ use crate::time_matrix::TimeMatrix;
 
 use std::io::{Read};
 use std::fs::{File};
+use std::collections::HashMap;
 use rand::prelude::SliceRandom;
 use rand::RngExt;
 
@@ -121,14 +122,29 @@ impl Problem {
     }
 
     fn solution_serves_all_nodes_once(&self, solution: &Solution) -> bool {
-        let mut served_nodes = solution.truck_path.clone();
-        served_nodes.append(&mut solution.flights.iter().map(|x| x.goal).collect());
-        served_nodes.sort();
+        let required_len = solution.truck_path.len() + solution.flights.len();
+        if self.customer_count + 2 != required_len {
+            return false;
+        }
 
-        let mut required_nodes = vec![0];
-        required_nodes.append(&mut (0..=self.customer_count).collect());
+        let mut counts = vec![1; self.customer_count + 1];
+        counts[0] = 2;
 
-        return served_nodes == required_nodes;
+        for &node in solution.truck_path.iter() {
+            if counts[node] == 0 {
+                return false;
+            }
+            counts[node] -= 1; 
+        }
+
+        for flight in solution.flights.iter() {
+            if counts[flight.goal] == 0 {
+                return false;
+            }
+            counts[flight.goal] -= 1; 
+        }
+        
+        return true;
     }
 
     fn solution_drone_deployments_are_valid(&self, solution: &Solution) -> bool {
