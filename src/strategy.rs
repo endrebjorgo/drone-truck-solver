@@ -33,6 +33,7 @@ impl Strategy for RandomSearch {
                 if score < best_score {
                     best_solution = current_solution;
                     best_score = score;
+                    continue;
                 }
             }
         }

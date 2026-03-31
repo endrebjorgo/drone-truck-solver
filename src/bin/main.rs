@@ -3,8 +3,6 @@ use drone_truck_solver::problem::Problem;
 use drone_truck_solver::solver::Solver;
 use drone_truck_solver::strategy::{LocalSearch};
 
-use rand::SeedableRng;
-
 fn main() {
     if let Some(input_path) = std::env::args().nth(1) {
         if std::fs::exists(&input_path).is_err() {
