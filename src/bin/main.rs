@@ -1,7 +1,12 @@
-use drone_truck_solver::operator::{Swap};
+use drone_truck_solver::operator::{OneInsert};
 use drone_truck_solver::problem::Problem;
 use drone_truck_solver::solver::Solver;
-use drone_truck_solver::strategy::{LocalSearch};
+use drone_truck_solver::strategy::{LocalSearch, SimulatedAnnealing};
+
+use rand::SeedableRng;
+use rand::rngs::SmallRng;
+
+const RNG_SEED: u64 = 1337;
 
 fn main() {
     if let Some(input_path) = std::env::args().nth(1) {
@@ -12,7 +17,8 @@ fn main() {
         let problem = Problem::from_file(&input_path);
 
         let mut solver = Solver {
-            strategy: LocalSearch::new().add_operator(Swap),
+            strategy: SimulatedAnnealing::new(SmallRng::seed_from_u64(RNG_SEED))
+                .add_operator(OneInsert),
         };
 
         let (solution, score) = solver.solve(&problem);
@@ -22,5 +28,4 @@ fn main() {
     } else {
         panic!("pass the input file as argument");
     }
-
 }

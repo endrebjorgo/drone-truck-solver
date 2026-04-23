@@ -1,8 +1,8 @@
-use crate::operator::Swap;
+use crate::operator::OneInsert;
 use crate::problem::Problem;
 use crate::solution::Solution;
 use crate::solver::Solver;
-use crate::strategy::{LocalSearch, RandomSearch, Strategy};
+use crate::strategy::{LocalSearch, RandomSearch, SimulatedAnnealing, Strategy};
 
 use std::time::Instant;
 use rand::rngs::SmallRng;
@@ -36,7 +36,12 @@ impl InstanceReport {
         };
 
         let mut local_solver = Solver { 
-            strategy: LocalSearch::new().add_operator(Swap)
+            strategy: LocalSearch::new().add_operator(OneInsert)
+        };
+
+        let mut sim_annealing_solver = Solver {
+            strategy: SimulatedAnnealing::new(SmallRng::seed_from_u64(RNG_SEED))
+                .add_operator(OneInsert)
         };
 
         instance_report.strategy_reports
@@ -44,6 +49,9 @@ impl InstanceReport {
 
         instance_report.strategy_reports
             .push(StrategyReport::generate(&mut local_solver, &problem));
+
+        instance_report.strategy_reports
+            .push(StrategyReport::generate(&mut sim_annealing_solver, &problem));
 
         return instance_report;
     }    
@@ -84,11 +92,10 @@ impl InstanceReport {
                 report.improvement,
                 report.average_time
             );
+            // println!("Best solution: {}", report.best_solution.to_submission_format());
         }
         println!("{}", divider);
         println!();
-
-        //println!("Best solution: {}", self.best_solution.to_submission_format());
     }
 }
 
