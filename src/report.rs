@@ -85,7 +85,15 @@ impl InstanceReport {
         println!("{}", divider);
         println!("| {: ^len1$} | {} | {} | {} | {} |", col1, col2, col3, col4, col5);
         println!("{}", divider);
+
+        let mut best_solution = Solution::default();
+        let mut best_score = u32::MAX;
+
         for report in self.strategy_reports.iter() {
+            if report.best_score < best_score {
+                best_solution = report.best_solution.clone();
+                best_score = report.best_score;
+            }
             println!("| {: ^len1$} | {: ^len2$} | {: ^len3$} | {: ^len4$.2} | {: ^len5$.3} |",
                 report.strategy_name,
                 report.average_score,
@@ -93,9 +101,9 @@ impl InstanceReport {
                 report.improvement,
                 report.average_time
             );
-            // println!("Best solution: {}", report.best_solution.to_submission_format());
         }
         println!("{}", divider);
+        println!("Best solution: {}", best_solution.to_submission_format());
         println!();
     }
 }
