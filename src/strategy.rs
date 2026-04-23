@@ -121,7 +121,8 @@ impl SimulatedAnnealing {
 
 impl Strategy for SimulatedAnnealing {
     fn solve(&mut self, problem: &Problem) -> (Solution, u32) {
-        let mut visited: HashSet<Solution> = HashSet::new();
+        // TODO: extract hard coded values as parameters
+        // final_temp, 0.8 etc.
 
         let mut best_solution = problem.generate_initial_solution(); 
         let mut best_score = problem.calculate_score(&best_solution)
@@ -137,9 +138,10 @@ impl Strategy for SimulatedAnnealing {
         for _ in 0..100 {
             neighborhood.clear();
             for op in self.operators.iter(){
-                neighborhood.append(&mut op.generate_neighborhood(&best_solution));
+                neighborhood.append(&mut op.generate_neighborhood(&incumbent_solution));
             }
             
+            // NOTE: implement some get_random to avoid generating all neighbors
             let new_solution = neighborhood.choose(&mut self.rng)
                 .expect("neighborhood was empty");
 
@@ -169,7 +171,7 @@ impl Strategy for SimulatedAnnealing {
         for _ in 0..9900 {
             neighborhood.clear();
             for op in self.operators.iter(){
-                neighborhood.append(&mut op.generate_neighborhood(&best_solution));
+                neighborhood.append(&mut op.generate_neighborhood(&incumbent_solution));
             }   
             
             let new_solution = neighborhood.choose(&mut self.rng)
@@ -191,6 +193,7 @@ impl Strategy for SimulatedAnnealing {
                     }
                 }
             } 
+
             temperature *= alpha;
         }
 
