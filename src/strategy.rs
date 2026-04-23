@@ -138,10 +138,9 @@ impl Strategy for SimulatedAnnealing {
         for _ in 0..100 {
             neighborhood.clear();
             for op in self.operators.iter(){
-                neighborhood.append(&mut op.generate_neighborhood(&incumbent_solution));
+                neighborhood.push(op.get_random_neighbor(&incumbent_solution, &mut self.rng));
             }
             
-            // NOTE: implement some get_random to avoid generating all neighbors
             let new_solution = neighborhood.choose(&mut self.rng)
                 .expect("neighborhood was empty");
 
@@ -164,14 +163,16 @@ impl Strategy for SimulatedAnnealing {
         }
 
         let delta_avg: f64 = deltas.iter().sum::<u32>() as f64 / deltas.len() as f64;
-        let final_temperature = 0.1;
+
         let mut temperature = -delta_avg / 0.8f64.ln();
+        let final_temperature = 0.1;
+
         let alpha = (final_temperature / temperature).powf(1.0 / 9900.0);
 
         for _ in 0..9900 {
             neighborhood.clear();
             for op in self.operators.iter(){
-                neighborhood.append(&mut op.generate_neighborhood(&incumbent_solution));
+                neighborhood.push(op.get_random_neighbor(&incumbent_solution, &mut self.rng));
             }   
             
             let new_solution = neighborhood.choose(&mut self.rng)
