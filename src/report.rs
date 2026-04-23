@@ -36,12 +36,13 @@ impl InstanceReport {
         };
 
         let mut local_solver = Solver { 
-            strategy: LocalSearch::new().add_operator(OneInsert)
+            strategy: LocalSearch::new(SmallRng::seed_from_u64(RNG_SEED))
+                .add_operator(OneInsert, 1)
         };
 
         let mut sim_annealing_solver = Solver {
             strategy: SimulatedAnnealing::new(SmallRng::seed_from_u64(RNG_SEED))
-                .add_operator(OneInsert)
+                .add_operator(OneInsert, 1)
         };
 
         instance_report.strategy_reports

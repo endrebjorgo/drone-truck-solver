@@ -18,7 +18,7 @@ fn main() {
 
         let mut solver = Solver {
             strategy: SimulatedAnnealing::new(SmallRng::seed_from_u64(RNG_SEED))
-                .add_operator(OneInsert),
+                .add_operator(OneInsert, 1),
         };
 
         let (solution, score) = solver.solve(&problem);
