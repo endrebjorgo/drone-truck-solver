@@ -40,8 +40,6 @@ impl Solution {
 
         let index_lookup = self.generate_truck_path_index_lookup();
 
-        // NOTE: have to differentiate between 'first' and 'last' depot
-
         let part3_1 = flights1.iter()
             .map(|x| (index_lookup[x.start] + 1).to_string());
         let part3_2 = flights2.iter()
@@ -53,9 +51,22 @@ impl Solution {
             .join(",");
 
         let part4_1 = flights1.iter()
-            .map(|x| (index_lookup[x.end] + 1).to_string());
+            .map(|x| 
+                if x.end == 0 {
+                    (*index_lookup.last().unwrap() + 1).to_string()
+                } else {
+                    (index_lookup[x.end] + 1).to_string()
+                }
+            );
         let part4_2 = flights2.iter()
-            .map(|x| (index_lookup[x.end] + 1).to_string());
+            .map(|x| 
+                if x.end == 0 {
+                    (*index_lookup.last().unwrap() + 1).to_string()
+                } else {
+                    (index_lookup[x.end] + 1).to_string()
+                }
+            );
+
 
         let part4 = part4_1.chain(vec!["-1".to_string()].into_iter())
             .chain(part4_2)

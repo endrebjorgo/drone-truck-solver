@@ -143,6 +143,30 @@ impl Problem {
         return true;
     }
 
+    pub fn solution_flights_are_feasible(&self, solution: &Solution) -> bool {
+        let index_lookup = solution.generate_truck_path_index_lookup();
+
+        for f in solution.flights.iter() {
+            if index_lookup[f.start] >= index_lookup[f.end] {
+                return false;
+            }
+
+            if f.start == f.goal {
+                return false;
+            }
+
+            if f.end == f.goal {
+                return false;
+            }
+
+            if self.drone_times.get(f.start, f.goal) + self.drone_times.get(f.goal, f.end) > self.flight_limit {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
     pub fn calculate_score(&self, solution: &Solution) -> Option<u32> {
         if !self.solution_starts_and_ends_at_depot(solution) {
             return None;
@@ -152,12 +176,11 @@ impl Problem {
             return None;
         }
 
-        if !solution.flights_are_feasible() {
+        if !self.solution_flights_are_feasible(solution) {
             return None;
         }
 
         // returns None if unable to split, i.e. flights overlap
-
         let (drone1, drone2) = solution.split_flights().ok()?;
 
         let index_lookup = solution.generate_truck_path_index_lookup();
@@ -186,38 +209,39 @@ impl Problem {
 
             for (u, flights) in drone_flights.iter().enumerate() {
                 for &(cust, launch_idx, return_idx) in flights {
-                    if return_idx == i {
-                        let launch_node = solution.truck_path[launch_idx];
-                        let return_node = solution.truck_path[return_idx];
-                        let flight_out = self.drone_times.get(launch_node, cust);
-                        let flight_back = self.drone_times.get(cust, return_node);
-                        let total_flight = flight_out + flight_back;
+                    if return_idx != i {
+                        continue;
+                    }
+                    let launch_node = solution.truck_path[launch_idx];
+                    let return_node = solution.truck_path[return_idx];
+                    let flight_out = self.drone_times.get(launch_node, cust);
+                    let flight_back = self.drone_times.get(cust, return_node);
+                    let total_flight = flight_out + flight_back;
 
-                        // Drone cannot depart before both truck and its own availability
-                        let possible_launch_time = arrival_times[launch_node];
-                        let actual_launch_time = if launch_node == 0 {
-                            0
+                    // Drone cannot depart before both truck and its own availability
+                    let possible_launch_time = arrival_times[launch_node];
+                    let actual_launch_time = if launch_node == 0 {
+                        0
+                    } else {
+                        cmp::max(possible_launch_time, drone_availability[u])
+                    };
+
+                    let drone_arrival_customer = actual_launch_time + flight_out;
+                    let drone_return_time = actual_launch_time + total_flight;
+                    drone_availability[u] = drone_return_time;
+                    drone_returns.push(drone_return_time);
+                    total_time += drone_arrival_customer;
+
+                    // Check flight range
+                    let drone_wait = if curr_node != 0 && 
+                        arrival_times[curr_node] > drone_return_time {
+                            arrival_times[curr_node] - drone_return_time
                         } else {
-                            cmp::max(possible_launch_time, drone_availability[u])
+                            0
                         };
-
-                        let drone_arrival_customer = actual_launch_time + flight_out;
-                        let drone_return_time = actual_launch_time + total_flight;
-                        drone_availability[u] = drone_return_time;
-                        drone_returns.push(drone_return_time);
-                        total_time += drone_arrival_customer;
-
-                        // Check flight range
-                        let drone_wait = if curr_node != 0 && 
-                            arrival_times[curr_node] > drone_return_time {
-                                arrival_times[curr_node] - drone_return_time
-                            } else {
-                                0
-                            };
-                        let total_flight_with_wait = total_flight + drone_wait;
-                        if total_flight_with_wait > self.flight_limit {
-                            return None;
-                        }
+                    let total_flight_with_wait = total_flight + drone_wait;
+                    if total_flight_with_wait > self.flight_limit {
+                        return None;
                     }
                 }
             }

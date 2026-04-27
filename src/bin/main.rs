@@ -24,6 +24,7 @@ fn main() {
 
         let (solution, score) = solver.solve(&problem);
 
+        println!("{:?}", solution);
         println!("Best solution: {:?}", solution.to_submission_format());
         println!("Objective: {:.2}", score as f64 / 100.0);
     } else {
