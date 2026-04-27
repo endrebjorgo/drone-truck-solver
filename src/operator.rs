@@ -4,7 +4,7 @@ use rand::{Rng, RngExt};
 
 pub trait Operator {
     fn generate_neighborhood(&self, solution: &Solution) -> Vec<Solution>;
-    fn get_random_neighbor(&self, solution: &Solution, rng: &mut dyn Rng) -> Solution;
+    fn get_random_neighbor(&self, solution: &Solution, rng: &mut dyn Rng) -> Option<Solution>;
 }
 
 pub struct OneInsert;
@@ -17,7 +17,7 @@ impl Operator for OneInsert {
 
         for i in 1..n {
             for j in 1..n {
-                if i + 1 == solution.truck_path.len() {
+                if i == solution.truck_path.len() {
                     continue;
                 }
 
@@ -57,14 +57,14 @@ impl Operator for OneInsert {
         return neighborhood;
     }
 
-    fn get_random_neighbor(&self, solution: &Solution, rng: &mut dyn Rng) -> Solution {
+    fn get_random_neighbor(&self, solution: &Solution, rng: &mut dyn Rng) -> Option<Solution> {
         let n = solution.truck_path.len() + solution.flights.len();
 
         let mut i = rng.random_range(1..n);
         let mut j = rng.random_range(1..n);
 
         // reroll if invalid random value
-        while i + 1 == solution.truck_path.len() {
+        while i == solution.truck_path.len() {
             i = rng.random_range(1..n)
         }
 
@@ -95,7 +95,7 @@ impl Operator for OneInsert {
             }
         }
 
-        return Solution::new(new_truck_path, new_flights);
+        return Some(Solution::new(new_truck_path, new_flights));
     }
 }
 
@@ -137,9 +137,9 @@ impl Operator for DeployDrone {
         return neighborhood;
     }
 
-    fn get_random_neighbor(&self, solution: &Solution, rng: &mut dyn Rng) -> Solution {
+    fn get_random_neighbor(&self, solution: &Solution, rng: &mut dyn Rng) -> Option<Solution> {
         if solution.truck_path.len() < 3 {
-            return solution.clone();
+            return None;
         }
 
         let index_lookup = solution.generate_truck_path_index_lookup();
@@ -163,6 +163,103 @@ impl Operator for DeployDrone {
 
         new_flights.insert(insert_idx, new_flight);
 
-        return Solution::new(new_truck_path, new_flights);
+        return Some(Solution::new(new_truck_path, new_flights));
+    }
+}
+
+struct ScoochLaunchAndLanding;
+
+impl Operator for ScoochLaunchAndLanding {
+    fn generate_neighborhood(&self, solution: &Solution) -> Vec<Solution> {
+        let mut neighborhood: Vec<Solution> = Vec::new();
+
+        if solution.flights.len() == 0 {
+            return neighborhood;
+        }
+
+        let index_lookup = solution.generate_truck_path_index_lookup();
+
+        for i in 0..solution.flights.len() {
+            let mut new_flights = solution.flights.clone();
+
+            let start_idx = index_lookup[solution.flights[i].start];
+            let end_idx = index_lookup[solution.flights[i].end];
+            
+            for j in 0..4 {
+                match j {
+                    0 => {
+                        new_flights = solution.flights.clone();
+                        new_flights[i].start = start_idx - 1;
+                        neighborhood.push(
+                            Solution::new(solution.truck_path.clone(), new_flights)
+                        );
+                    },
+                    1 => {
+                        new_flights = solution.flights.clone();
+                        new_flights[i].start = start_idx + 1;
+                        neighborhood.push(
+                            Solution::new(solution.truck_path.clone(), new_flights)
+                        );
+                    },
+                    2 => {
+                        new_flights = solution.flights.clone();
+                        new_flights[i].end = end_idx - 1;
+                        neighborhood.push(
+                            Solution::new(solution.truck_path.clone(), new_flights)
+                        );
+                    },
+                    3 => {
+                        new_flights = solution.flights.clone();
+                        new_flights[i].end = end_idx + 1;
+                        neighborhood.push(
+                            Solution::new(solution.truck_path.clone(), new_flights)
+                        );
+                    },
+                    _ => unimplemented!(),
+                }
+            }
+        }
+
+        return neighborhood;
+    }
+
+    fn get_random_neighbor(&self, solution: &Solution, rng: &mut dyn Rng) -> Option<Solution> {
+        if solution.flights.len() == 0 {
+            return None;
+        }
+
+        let index_lookup = solution.generate_truck_path_index_lookup();
+
+        let i = rng.random_range(0..solution.flights.len());
+        let j = rng.random_range(0..4);
+
+        let mut new_flights = solution.flights.clone();
+
+        let start_idx = index_lookup[solution.flights[i].start];
+        let end_idx = index_lookup[solution.flights[i].end];
+
+        match j {
+            0 => {
+                new_flights = solution.flights.clone();
+                new_flights[i].start = start_idx - 1;
+                return Some(Solution::new(solution.truck_path.clone(), new_flights));
+            },
+            1 => {
+                new_flights = solution.flights.clone();
+                new_flights[i].start = start_idx + 1;
+                return Some(Solution::new(solution.truck_path.clone(), new_flights));
+            },
+            2 => {
+                new_flights = solution.flights.clone();
+                new_flights[i].end = end_idx - 1;
+                return Some(Solution::new(solution.truck_path.clone(), new_flights));
+            },
+            3 => {
+                new_flights = solution.flights.clone();
+                new_flights[i].end = end_idx + 1;
+                return Some(Solution::new(solution.truck_path.clone(), new_flights));
+            },
+            _ => unimplemented!(),
+        }
     }
 }

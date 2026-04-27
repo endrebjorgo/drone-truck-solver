@@ -38,7 +38,6 @@ impl InstanceReport {
         instance_report.strategy_reports
             .push(StrategyReport::generate(&mut random_solver, &problem));
 
-        /*
         let mut local_solver = Solver { 
             strategy: LocalSearch::new(SmallRng::seed_from_u64(RNG_SEED))
                 .add_operator(OneInsert, 1)
@@ -49,13 +48,11 @@ impl InstanceReport {
 
         let mut sim_annealing_solver = Solver {
             strategy: SimulatedAnnealing::new(SmallRng::seed_from_u64(RNG_SEED))
-                .add_operator(DeployDrone, 1)
                 .add_operator(OneInsert, 1)
         };
 
         instance_report.strategy_reports
             .push(StrategyReport::generate(&mut sim_annealing_solver, &problem));
-        */
 
         return instance_report;
     }    

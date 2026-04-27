@@ -76,8 +76,11 @@ impl Strategy for LocalSearch {
 
         for _ in 0..10_000 {
             let op_idx = weighted_dist.sample(&mut self.rng);
-            let new_solution = self.operators[op_idx]
-                .get_random_neighbor(&best_solution, &mut self.rng);
+            let Some(new_solution) = self.operators[op_idx]
+                .get_random_neighbor(&best_solution, &mut self.rng) 
+            else {
+                continue;
+            };
 
             if let Some(new_score) = problem.calculate_score(&new_solution) {
                 if new_score < best_score {
@@ -132,8 +135,11 @@ impl Strategy for SimulatedAnnealing {
 
         for _ in 0..100 {
             let op_idx = weighted_dist.sample(&mut self.rng);
-            let new_solution = self.operators[op_idx]
-                .get_random_neighbor(&incumbent_solution, &mut self.rng);
+            let Some(new_solution) = self.operators[op_idx]
+                .get_random_neighbor(&incumbent_solution, &mut self.rng) 
+            else {
+                continue;
+            };
 
             if let Some(new_score) = problem.calculate_score(&new_solution) {
                 if new_score < incumbent_score {
@@ -162,8 +168,11 @@ impl Strategy for SimulatedAnnealing {
 
         for _ in 0..9900 {
             let op_idx = weighted_dist.sample(&mut self.rng);
-            let new_solution = self.operators[op_idx]
-                .get_random_neighbor(&incumbent_solution, &mut self.rng);
+            let Some(new_solution) = self.operators[op_idx]
+                .get_random_neighbor(&incumbent_solution, &mut self.rng) 
+            else {
+                continue;
+            };
 
             if let Some(new_score) = problem.calculate_score(&new_solution) {
                 if new_score < incumbent_score {
