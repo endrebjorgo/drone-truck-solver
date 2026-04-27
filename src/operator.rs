@@ -167,7 +167,7 @@ impl Operator for DeployDrone {
     }
 }
 
-struct ScoochLaunchAndLanding;
+pub struct ScoochLaunchAndLanding;
 
 impl Operator for ScoochLaunchAndLanding {
     fn generate_neighborhood(&self, solution: &Solution) -> Vec<Solution> {
@@ -180,7 +180,7 @@ impl Operator for ScoochLaunchAndLanding {
         let index_lookup = solution.generate_truck_path_index_lookup();
 
         for i in 0..solution.flights.len() {
-            let mut new_flights = solution.flights.clone();
+            let mut new_flights;
 
             let start_idx = index_lookup[solution.flights[i].start];
             let end_idx = index_lookup[solution.flights[i].end];
@@ -233,7 +233,7 @@ impl Operator for ScoochLaunchAndLanding {
         let i = rng.random_range(0..solution.flights.len());
         let j = rng.random_range(0..4);
 
-        let mut new_flights = solution.flights.clone();
+        let mut new_flights;
 
         let start_idx = index_lookup[solution.flights[i].start];
         let end_idx = index_lookup[solution.flights[i].end];
