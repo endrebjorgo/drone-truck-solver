@@ -143,40 +143,6 @@ impl Problem {
         return true;
     }
 
-    fn solution_drone_deployments_are_valid(&self, solution: &Solution) -> bool {
-        // count number of drone departures and arrivals at each node
-        let mut departures = vec![0; self.customer_count + 1];
-        let mut arrivals = vec![0; self.customer_count + 1];
-
-        for flight in solution.flights.iter() {
-            departures[flight.start] += 1;
-            arrivals[flight.end] += 1;
-        }
-
-        // check that the number of deployed drones is always 0, 1 or 2
-        let mut deployed_drones = 0;
-
-        for (idx, &node) in solution.truck_path.iter().enumerate() {
-            let node_is_not_last = node != 0 || idx == 0;
-            let node_is_not_first = idx != 0;
-
-            if node_is_not_last {
-                deployed_drones += departures[node];
-            }
-
-            if node_is_not_first {
-                deployed_drones -= arrivals[node];
-            }
-
-            if deployed_drones < 0 || deployed_drones > 2 {
-                return false;
-            }
-        }
-
-        // no drones are deployed when the tour is over
-        return deployed_drones == 0;
-    }
-
     pub fn calculate_score(&self, solution: &Solution) -> Option<u32> {
         if !self.solution_starts_and_ends_at_depot(solution) {
             return None;
@@ -186,17 +152,13 @@ impl Problem {
             return None;
         }
 
-        if !self.solution_drone_deployments_are_valid(solution) {
-            return None;
-        }
-
         if !solution.flights_deploy_in_order() {
             return None;
         }
 
-        let index_lookup = solution.generate_truck_path_index_lookup();
-
         let (drone1, drone2) = solution.split_flights().ok()?;
+
+        let index_lookup = solution.generate_truck_path_index_lookup();
 
         let mut drone_flights: Vec<Vec<(usize, usize, usize)>> = Vec::new();
         drone_flights.push(drone1.iter().map(|x|
