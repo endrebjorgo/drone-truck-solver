@@ -1,4 +1,4 @@
-use crate::operator::{OneInsert, DeployDrone};
+use crate::operator::{OneInsert, DeployDrone, SwapTrucks, ScoochLaunchAndLanding};
 use crate::problem::Problem;
 use crate::solution::Solution;
 use crate::solver::Solver;
@@ -53,6 +53,16 @@ impl InstanceReport {
 
         instance_report.strategy_reports
             .push(StrategyReport::generate(&mut sim_annealing_solver, &problem));
+
+        let mut sim_annealing_solver_multi = Solver {
+            strategy: SimulatedAnnealing::new(SmallRng::seed_from_u64(RNG_SEED))
+                .add_operator(DeployDrone, 1)
+                .add_operator(SwapTrucks, 1)
+                .add_operator(ScoochLaunchAndLanding, 1)
+        };
+
+        instance_report.strategy_reports
+            .push(StrategyReport::generate(&mut sim_annealing_solver_multi, &problem));
 
         return instance_report;
     }    

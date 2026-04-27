@@ -284,6 +284,7 @@ impl Operator for SwapTrucks {
 
         return neighborhood;
     }
+
     fn get_random_neighbor(&self, solution: &Solution, rng: &mut dyn Rng) -> Option<Solution> {
         let i = rng.random_range(1..(solution.truck_path.len() - 2));
         let j = rng.random_range(i..(solution.truck_path.len() - 1));
