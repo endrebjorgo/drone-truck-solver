@@ -152,11 +152,12 @@ impl Problem {
             return None;
         }
 
-        if !solution.flights_deploy_in_order() {
+        if !solution.flights_are_feasible() {
             return None;
         }
 
         // returns None if unable to split, i.e. flights overlap
+
         let (drone1, drone2) = solution.split_flights().ok()?;
 
         let index_lookup = solution.generate_truck_path_index_lookup();

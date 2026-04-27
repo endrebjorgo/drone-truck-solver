@@ -78,42 +78,64 @@ impl Solution {
         return index_lookup;
     }
 
-    pub fn flights_deploy_in_order(&self) -> bool {
+    pub fn flights_are_feasible(&self) -> bool {
         let index_lookup = self.generate_truck_path_index_lookup();
 
-        let start_idxs: Vec<usize> = self.flights.iter()
-            .map(|f| index_lookup[f.start])
-            .collect();
+        for f in self.flights.iter() {
+            let start_idx = index_lookup[f.start];
+            let end_idx = if f.end == 0 {
+                *index_lookup.last().unwrap()
+            } else {
+                index_lookup[f.end]
+            };
 
-        return start_idxs.windows(2).all(|w| w[0] <= w[1]);
+            if start_idx >= end_idx {
+                return false;
+            }
+
+            if f.start == f.goal {
+                return false;
+            }
+
+            if f.end == f.goal {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    pub fn sorted_flights(&self) -> Vec<Flight> {
+        let index_lookup = self.generate_truck_path_index_lookup();
+
+        let mut flights = self.flights.clone();
+        flights.sort_by_key(|x| index_lookup[x.start]);
+
+        return flights;
     }
 
     pub fn split_flights(&self) -> Result<(Vec<Flight>, Vec<Flight>), &str> {
         // NOTE: should be adapted for more drones
-        assert!(self.flights_deploy_in_order());
-
         let mut flights1 = Vec::new();
         let mut flights2 = Vec::new();
 
-        for curr in self.flights.iter() {
+        for curr in self.sorted_flights() {
             // NOTE: assumes that flights are valid, i.e. start comes before end
             // if current flight overlaps with previous flight1, push to flights2
 
-            if let Some(prev) = flights1.last() {
-                if !self.flights_overlap(curr, prev) {
-                    flights1.push(curr.clone());
-                    continue;
-                }
-            }
+            let overlaps_flights1 = flights1.iter().any(|prev|
+                self.flights_overlap(&curr, prev));
 
-            if let Some(prev) = flights2.last() {
-                if !self.flights_overlap(curr, prev) {
-                    flights2.push(curr.clone());
-                    continue;
-                }
-            }
+            let overlaps_flights2 = flights1.iter().any(|prev|
+                self.flights_overlap(&curr, prev));
 
-            return Err("cannot split flights without overlap");
+            if !overlaps_flights1 {
+                flights1.push(curr.clone());
+            } else if !overlaps_flights2 {
+                flights2.push(curr.clone());
+            } else {
+                return Err("cannot split flights without overlap");
+            }
         }
 
         return Ok((flights1, flights2));
@@ -139,6 +161,6 @@ impl Solution {
             index_lookup[flight1.end]
         };
 
-        return start1 >= end2 || end1 <= start2; 
+        return start1 < end2 || end1 > start2; 
     }
 }

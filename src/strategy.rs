@@ -113,7 +113,6 @@ impl SimulatedAnnealing {
     }
 }
 
-
 impl Strategy for SimulatedAnnealing {
     fn solve(&mut self, problem: &Problem) -> (Solution, u32) {
         // TODO: extract hard coded values as parameters

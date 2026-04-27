@@ -1,4 +1,4 @@
-use crate::operator::OneInsert;
+use crate::operator::{OneInsert, DeployDrone};
 use crate::problem::Problem;
 use crate::solution::Solution;
 use crate::solver::Solver;
@@ -42,7 +42,7 @@ impl InstanceReport {
 
         let mut sim_annealing_solver = Solver {
             strategy: SimulatedAnnealing::new(SmallRng::seed_from_u64(RNG_SEED))
-                .add_operator(OneInsert, 1)
+                .add_operator(DeployDrone, 1)
         };
 
         instance_report.strategy_reports

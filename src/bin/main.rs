@@ -1,4 +1,4 @@
-use drone_truck_solver::operator::{OneInsert};
+use drone_truck_solver::operator::{OneInsert, DeployDrone};
 use drone_truck_solver::problem::Problem;
 use drone_truck_solver::solver::Solver;
 use drone_truck_solver::strategy::{LocalSearch, SimulatedAnnealing};
@@ -18,13 +18,13 @@ fn main() {
 
         let mut solver = Solver {
             strategy: SimulatedAnnealing::new(SmallRng::seed_from_u64(RNG_SEED))
-                .add_operator(OneInsert, 1),
+                .add_operator(DeployDrone, 1),
         };
 
         let (solution, score) = solver.solve(&problem);
 
         println!("Best solution: {:?}", solution.to_submission_format());
-        println!("Objective: {}", score);
+        println!("Objective: {:.2}", score as f64 / 100.0);
     } else {
         panic!("pass the input file as argument");
     }
