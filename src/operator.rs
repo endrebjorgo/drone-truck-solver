@@ -78,14 +78,14 @@ impl Operator for OneInsert {
         let node = if i < solution.truck_path.len() {
             new_truck_path.remove(i)
         } else {
-            new_flights.remove(i).goal
+            new_flights.remove(i - solution.truck_path.len()).goal
         };
 
         if j < solution.truck_path.len() {
             new_truck_path.insert(j, node);
         } else {
             if i < solution.truck_path.len() {
-                new_flights.insert(j, Flight {
+                new_flights.insert(j - solution.truck_path.len(), Flight {
                     start: solution.truck_path[i - 1], 
                     goal: node,
                     end: solution.truck_path[i + 1],

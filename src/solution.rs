@@ -158,7 +158,7 @@ impl Solution {
         let end2 = if flight2.end == 0 {
             *index_lookup.last().unwrap()
         } else {
-            index_lookup[flight1.end]
+            index_lookup[flight2.end]
         };
 
         return start1 < end2 || end1 > start2; 
