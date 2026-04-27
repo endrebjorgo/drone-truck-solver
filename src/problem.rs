@@ -156,23 +156,19 @@ impl Problem {
             return None;
         }
 
+        // returns None if unable to split, i.e. flights overlap
         let (drone1, drone2) = solution.split_flights().ok()?;
 
         let index_lookup = solution.generate_truck_path_index_lookup();
 
-        let mut drone_flights: Vec<Vec<(usize, usize, usize)>> = Vec::new();
-        drone_flights.push(drone1.iter().map(|x|
-                (x.goal, index_lookup[x.start], index_lookup[x.end])
-            ).collect()
-        );
-        drone_flights.push(drone2.iter().map(|x|
-                (x.goal, index_lookup[x.start], index_lookup[x.end])
-            ).collect()
-        );
+        let drone_flights: Vec<Vec<(usize, usize, usize)>> = vec![
+            drone1.iter().map(|x| (x.goal, index_lookup[x.start], index_lookup[x.end])).collect(),
+            drone2.iter().map(|x| (x.goal, index_lookup[x.start], index_lookup[x.end])).collect(),
+        ];
 
-        let mut t_arrival: Vec<u32> = vec![0; self.customer_count + 1];
-        let mut t_departure: Vec<u32> = vec![0; self.customer_count + 1];
-        let mut drone_availability: Vec<u32> = vec![0; drone_flights.len()];
+        let mut arrival_times: Vec<u32> = vec![0; self.customer_count + 1];
+        let mut departure_times: Vec<u32> = vec![0; self.customer_count + 1];
+        let mut drone_availability: Vec<u32> = vec![0, 0];
         let mut total_time: u32 = 0;
 
         for i in 1..solution.truck_path.len() {
@@ -181,8 +177,8 @@ impl Problem {
 
             // Truck travel time
             let truck_travel = self.truck_times.get(prev_node, curr_node);
-            let truck_arrival = t_departure[prev_node] + truck_travel;
-            t_arrival[curr_node] = truck_arrival;
+            let truck_arrival = departure_times[prev_node] + truck_travel;
+            arrival_times[curr_node] = truck_arrival;
 
             // Check returning drones at curr_node (index i)
             let mut drone_returns: Vec<u32> = Vec::new();
@@ -197,7 +193,7 @@ impl Problem {
                         let total_flight = flight_out + flight_back;
 
                         // Drone cannot depart before both truck and its own availability
-                        let possible_launch_time = t_arrival[launch_node];
+                        let possible_launch_time = arrival_times[launch_node];
                         let actual_launch_time = if launch_node == 0 {
                             0
                         } else {
@@ -212,8 +208,8 @@ impl Problem {
 
                         // Check flight range
                         let drone_wait = if curr_node != 0 && 
-                            t_arrival[curr_node] > drone_return_time {
-                                t_arrival[curr_node] - drone_return_time
+                            arrival_times[curr_node] > drone_return_time {
+                                arrival_times[curr_node] - drone_return_time
                             } else {
                                 0
                             };
@@ -224,13 +220,13 @@ impl Problem {
                     }
                 }
             }
-            //
+
             // Truck waits for the latest returning drone
             if !drone_returns.is_empty() {
                 let latest_drone = drone_returns.iter().fold(0, |a, &b| a.max(b));
-                t_departure[curr_node] = cmp::max(truck_arrival, latest_drone);
+                departure_times[curr_node] = cmp::max(truck_arrival, latest_drone);
             } else {
-                t_departure[curr_node] = truck_arrival;
+                departure_times[curr_node] = truck_arrival;
             }
 
             // Add truck arrival time to total_time if not depot
@@ -241,100 +237,5 @@ impl Problem {
 
         return Some(total_time);
     }
-
-    /*
-    pub fn calculate_score(&self, solution: &Solution) -> Option<u32> {
-        // TODO: incorporate checks into calculation to avoid redundant loops
-        // specifically the ones that loop
-
-        if !self.solution_starts_and_ends_at_depot(solution) {
-            return None;
-        }
-
-        if !self.solution_serves_all_nodes_once(solution) {
-            return None;
-        }
-
-        if !self.solution_drone_deployments_are_valid(solution) {
-            return None;
-        }
-
-        if !solution.flights_deploy_in_order() {
-            return None;
-        }
-
-        let mut total_time: u32 = 0;
-        let mut curr_time: u32 = 0;
-
-        let mut drone_arrivals: Vec<u32> = vec![0; self.customer_count + 1];
-        let mut truck_arrivals: Vec<u32> = vec![0; self.customer_count + 1];
-
-        let mut prev_node: usize = 0;
-
-        assert_eq!(solution.truck_path.first(), Some(&0));
-
-        for &curr_node in solution.truck_path.iter() {
-            // arrival time of truck at current node (0 if starting)
-            curr_time += self.truck_times.get(prev_node, curr_node);
-            truck_arrivals[curr_node] = curr_time;
-
-            // add the current time to the total time, as the truck has arrived
-            total_time += curr_time;
-
-            // the truck checks if it can send out 0/1/2 drone(s).
-            for flight in solution.flights.iter() {
-                if flight.start != curr_node {
-                    continue;
-                }
-
-                let out_time = self.drone_times.get(flight.start, flight.goal);
-                let in_time = self.drone_times.get(flight.goal, flight.end);
-
-                // does the flight time exceed limit?
-                if out_time + in_time > self.flight_limit {
-                    return None;
-                }
-
-                // add arrival time at goal node
-                total_time += curr_time + out_time;
-                drone_arrivals[flight.goal] = curr_time + out_time;
-
-                // save maximum arrival time of drones
-                let drone_arrival = curr_time + out_time + in_time;
-
-                if drone_arrival > drone_arrivals[flight.end] {
-                    drone_arrivals[flight.end] = drone_arrival;
-                }
-            }
-
-            // NOTE: it may not be best to send out drones instantly if the 
-            // truck is waiting for another drone to arrive before departing. 
-            // this may cause the total flight time to exceed limit, but it 
-            // does however reduce the arrival time at the goal nodes.
-
-            // check if truck must wait on some arriving drone
-            if curr_time < drone_arrivals[curr_node] {
-                curr_time = drone_arrivals[curr_node];
-            }
-
-            prev_node = curr_node;
-        }
-
-        // check if the truck ever takes longer to travel than the flight limit:
-        for flight in solution.flights.iter() {
-            let truck_duration = if flight.start != 0 {
-                truck_arrivals[flight.end] - truck_arrivals[flight.start]
-            } else {
-                truck_arrivals[flight.end]
-            };
-
-            if truck_duration > self.flight_limit {
-                return None;
-            }
-        }
-
-        return Some(total_time);
-    }
-*/
 }
 
