@@ -15,6 +15,8 @@ impl Operator for OneInsert {
 
         let n = solution.truck_path.len() + solution.flights.len();
 
+        // TODO: Should not remove the start and end nodes of truck_path
+
         for i in 0..n {
             for j in 0..n {
                 if i == j { 
@@ -86,24 +88,71 @@ impl Operator for OneInsert {
     }
 }
 
-/*
-pub struct Swap;
+pub struct DeployDrone;
 
-impl Operator for Swap {
+
+impl Operator for DeployDrone {
     fn generate_neighborhood(&self, solution: &Solution) -> Vec<Solution> {
         let mut neighborhood: Vec<Solution> = Vec::new();
 
-        for i in 1..(solution.truck_path.len() - 1) {
-            for j in (i + 1)..(solution.truck_path.len() - 1) {
-                let mut new_truck_path = solution.truck_path.clone();
-                new_truck_path.swap(i, j);
-                neighborhood.push(
-                    Solution::new(new_truck_path, solution.flights.clone())
-                );
-            }
+        if solution.truck_path.len() < 3 {
+            return neighborhood;
         }
+
+        let index_lookup = solution.generate_truck_path_index_lookup();
+
+        for i in 1..(solution.truck_path.len() - 1) {
+            let mut new_truck_path = solution.truck_path.clone();
+            let mut new_flights = solution.flights.clone();
+            
+            let new_flight = Flight {
+                start: solution.truck_path[i-1],
+                goal: solution.truck_path[i],
+                end: solution.truck_path[i+1],
+            };
+
+            new_truck_path.remove(i);
+            
+            let insert_idx = new_flights.iter()
+                .position(|flight| index_lookup[flight.start] > index_lookup[new_flight.start])
+                .unwrap_or(new_flights.len());
+
+            new_flights.insert(insert_idx, new_flight);
+
+            neighborhood.push(
+                Solution::new(new_truck_path, new_flights)
+            );
+        }
+
         return neighborhood;
     }
-}
-*/
 
+    fn get_random_neighbor(&self, solution: &Solution, rng: &mut dyn Rng) -> Solution {
+        if solution.truck_path.len() < 3 {
+            return solution.clone();
+        }
+
+        let index_lookup = solution.generate_truck_path_index_lookup();
+
+        let i = rng.random_range(1..(solution.truck_path.len() - 1));
+
+        let mut new_truck_path = solution.truck_path.clone();
+        let mut new_flights = solution.flights.clone();
+        
+        let new_flight = Flight {
+            start: solution.truck_path[i-1],
+            goal: solution.truck_path[i],
+            end: solution.truck_path[i+1],
+        };
+
+        new_truck_path.remove(i);
+        
+        let insert_idx = new_flights.iter()
+            .position(|flight| index_lookup[flight.start] > index_lookup[new_flight.start])
+            .unwrap_or(new_flights.len());
+
+        new_flights.insert(insert_idx, new_flight);
+
+        return Solution::new(new_truck_path, new_flights);
+    }
+}
