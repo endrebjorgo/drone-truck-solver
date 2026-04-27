@@ -196,7 +196,7 @@ impl Problem {
 
         let index_lookup = solution.generate_truck_path_index_lookup();
 
-        let (drone1, drone2) = solution.split_flights();
+        let (drone1, drone2) = solution.split_flights().ok()?;
 
         let mut drone_flights: Vec<Vec<(usize, usize, usize)>> = Vec::new();
         drone_flights.push(drone1.iter().map(|x|

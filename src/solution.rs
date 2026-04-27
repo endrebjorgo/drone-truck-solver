@@ -27,7 +27,8 @@ impl Solution {
             .collect::<Vec<String>>()
             .join(",");
 
-        let (flights1, flights2) = self.split_flights();
+        let (flights1, flights2) = self.split_flights()
+            .expect("tried to generate submission format of invalid solution");
 
         let part2_1 = flights1.iter().map(|x| x.goal.to_string());
         let part2_2 = flights2.iter().map(|x| x.goal.to_string());
@@ -87,7 +88,7 @@ impl Solution {
         return start_idxs.windows(2).all(|w| w[0] <= w[1]);
     }
 
-    pub fn split_flights(&self) -> (Vec<Flight>, Vec<Flight>) {
+    pub fn split_flights(&self) -> Result<(Vec<Flight>, Vec<Flight>), &str> {
         // NOTE: should be adapted for more drones
         assert!(self.flights_deploy_in_order());
 
@@ -99,17 +100,23 @@ impl Solution {
             // if current flight overlaps with previous flight1, push to flights2
 
             if let Some(prev) = flights1.last() {
-                if self.flights_overlap(curr, prev) {
-                    flights2.push(curr.clone());
-                } else {
+                if !self.flights_overlap(curr, prev) {
                     flights1.push(curr.clone());
+                    continue;
                 }
-            } else {
-                flights1.push(curr.clone());
             }
+
+            if let Some(prev) = flights2.last() {
+                if !self.flights_overlap(curr, prev) {
+                    flights2.push(curr.clone());
+                    continue;
+                }
+            }
+
+            return Err("cannot split flights without overlap");
         }
 
-        return (flights1, flights2);
+        return Ok((flights1, flights2));
     }
 
     fn flights_overlap(&self, flight1: &Flight, flight2: &Flight) -> bool {

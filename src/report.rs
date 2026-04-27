@@ -87,14 +87,14 @@ impl InstanceReport {
         println!("{}", divider);
 
         let mut best_solution = Solution::default();
-        let mut best_score = u32::MAX;
+        let mut best_score = f64::MAX;
 
         for report in self.strategy_reports.iter() {
             if report.best_score < best_score {
                 best_solution = report.best_solution.clone();
                 best_score = report.best_score;
             }
-            println!("| {: ^len1$} | {: ^len2$} | {: ^len3$} | {: ^len4$.2} | {: ^len5$.3} |",
+            println!("| {: ^len1$} | {: ^len2$.2} | {: ^len3$.2} | {: ^len4$.2} | {: ^len5$.3} |",
                 report.strategy_name,
                 report.average_score,
                 report.best_score,
@@ -111,8 +111,8 @@ impl InstanceReport {
 pub struct StrategyReport {
     pub strategy_name: String,
     pub best_solution: Solution,
-    pub best_score: u32,
-    pub average_score: u32,
+    pub best_score: f64,
+    pub average_score: f64,
     pub average_time: f64,
     pub improvement: f64,
 }
@@ -158,8 +158,8 @@ impl StrategyReport {
         Self {
             strategy_name,
             best_solution,
-            best_score,
-            average_score,
+            best_score: best_score as f64 / 100.0,
+            average_score: average_score as f64 / 100.0,
             average_time,
             improvement,
         }

@@ -2,3 +2,5 @@
 .DS_Store
 profile.json.gz
 results.txt
+python/
+TODO.md
