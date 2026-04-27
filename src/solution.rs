@@ -87,7 +87,7 @@ impl Solution {
         return start_idxs.windows(2).all(|w| w[0] <= w[1]);
     }
 
-    fn split_flights(&self) -> (Vec<Flight>, Vec<Flight>) {
+    pub fn split_flights(&self) -> (Vec<Flight>, Vec<Flight>) {
         // NOTE: should be adapted for more drones
         assert!(self.flights_deploy_in_order());
 

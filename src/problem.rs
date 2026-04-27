@@ -1,6 +1,7 @@
 use crate::solution::{Flight, Solution};
 use crate::time_matrix::TimeMatrix;
 
+use std::cmp;
 use std::io::{Read};
 use std::fs::{File};
 use rand::prelude::SliceRandom;
@@ -177,6 +178,110 @@ impl Problem {
     }
 
     pub fn calculate_score(&self, solution: &Solution) -> Option<u32> {
+        if !self.solution_starts_and_ends_at_depot(solution) {
+            return None;
+        }
+
+        if !self.solution_serves_all_nodes_once(solution) {
+            return None;
+        }
+
+        if !self.solution_drone_deployments_are_valid(solution) {
+            return None;
+        }
+
+        if !solution.flights_deploy_in_order() {
+            return None;
+        }
+
+        let index_lookup = solution.generate_truck_path_index_lookup();
+
+        let (drone1, drone2) = solution.split_flights();
+
+        let mut drone_flights: Vec<Vec<(usize, usize, usize)>> = Vec::new();
+        drone_flights.push(drone1.iter().map(|x|
+                (x.goal, index_lookup[x.start], index_lookup[x.end])
+            ).collect()
+        );
+        drone_flights.push(drone2.iter().map(|x|
+                (x.goal, index_lookup[x.start], index_lookup[x.end])
+            ).collect()
+        );
+
+        let mut t_arrival: Vec<u32> = vec![0; self.customer_count + 1];
+        let mut t_departure: Vec<u32> = vec![0; self.customer_count + 1];
+        let mut drone_availability: Vec<u32> = vec![0; drone_flights.len()];
+        let mut total_time: u32 = 0;
+
+        for i in 1..solution.truck_path.len() {
+            let prev_node = solution.truck_path[i - 1];
+            let curr_node = solution.truck_path[i];
+
+            // Truck travel time
+            let truck_travel = self.truck_times.get(prev_node, curr_node);
+            let truck_arrival = t_departure[prev_node] + truck_travel;
+            t_arrival[curr_node] = truck_arrival;
+
+            // Check returning drones at curr_node (index i)
+            let mut drone_returns: Vec<u32> = Vec::new();
+
+            for (u, flights) in drone_flights.iter().enumerate() {
+                for &(cust, launch_idx, return_idx) in flights {
+                    if return_idx == i {
+                        let launch_node = solution.truck_path[launch_idx];
+                        let return_node = solution.truck_path[return_idx];
+                        let flight_out = self.drone_times.get(launch_node, cust);
+                        let flight_back = self.drone_times.get(cust, return_node);
+                        let total_flight = flight_out + flight_back;
+
+                        // Drone cannot depart before both truck and its own availability
+                        let possible_launch_time = t_arrival[launch_node];
+                        let actual_launch_time = if launch_node == 0 {
+                            0
+                        } else {
+                            cmp::max(possible_launch_time, drone_availability[u])
+                        };
+
+                        let drone_arrival_customer = actual_launch_time + flight_out;
+                        let drone_return_time = actual_launch_time + total_flight;
+                        drone_availability[u] = drone_return_time;
+                        drone_returns.push(drone_return_time);
+                        total_time += drone_arrival_customer;
+
+                        // Check flight range
+                        let drone_wait = if curr_node != 0 && 
+                            t_arrival[curr_node] > drone_return_time {
+                                t_arrival[curr_node] - drone_return_time
+                            } else {
+                                0
+                            };
+                        let total_flight_with_wait = total_flight + drone_wait;
+                        if total_flight_with_wait > self.flight_limit {
+                            return None;
+                        }
+                    }
+                }
+            }
+            //
+            // Truck waits for the latest returning drone
+            if !drone_returns.is_empty() {
+                let latest_drone = drone_returns.iter().fold(0, |a, &b| a.max(b));
+                t_departure[curr_node] = cmp::max(truck_arrival, latest_drone);
+            } else {
+                t_departure[curr_node] = truck_arrival;
+            }
+
+            // Add truck arrival time to total_time if not depot
+            if curr_node != 0 {
+                total_time += truck_arrival;
+            }
+        }
+
+        return Some(total_time);
+    }
+
+    /*
+    pub fn calculate_score(&self, solution: &Solution) -> Option<u32> {
         // TODO: incorporate checks into calculation to avoid redundant loops
         // specifically the ones that loop
 
@@ -268,5 +373,6 @@ impl Problem {
 
         return Some(total_time);
     }
+*/
 }
 
