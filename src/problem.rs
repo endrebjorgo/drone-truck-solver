@@ -318,5 +318,45 @@ impl Problem {
 
         return Some(total_time);
     }
+
+    pub fn remove_moot_nodes(&self, solution: &Solution) -> Option<Solution> {
+        let index_lookup = solution.generate_truck_path_index_lookup();
+
+        let mut new_truck_path = solution.truck_path.clone();
+        let mut new_flights = solution.flights.clone();
+
+        let mut i = 0;
+        while i < new_flights.len() {
+            let flight = &new_flights[i];
+
+            let start_idx = index_lookup[new_flights[i].start];
+            let end_idx = index_lookup[new_flights[i].end];
+            let next_idx = start_idx + 1;
+            let next_node = solution.truck_path[next_idx];
+
+            let mut new_approx_time = self.truck_times.get(flight.start, flight.goal)
+                + self.truck_times.get(flight.goal, next_node);
+
+            for j in next_idx..end_idx {
+                new_approx_time += self.truck_times.get(solution.truck_path[j], solution.truck_path[j+1]);
+            }
+
+            let curr_drone_time = self.drone_times.get(flight.start, flight.goal) 
+                + self.drone_times.get(flight.goal, flight.end);
+
+            if curr_drone_time > new_approx_time {
+                new_truck_path.insert(next_idx, flight.goal);
+                new_flights.remove(i);
+            } else {
+                i += 1;
+            }
+        }
+        let new_solution = Solution::new(new_truck_path, new_flights);
+        if self.calculate_score(&new_solution).is_some() {
+            return Some(new_solution);
+        } else {
+            return None;
+        }
+    }
 }
 
