@@ -234,12 +234,12 @@ impl Strategy for GeneralAdaptive {
 
         let mut iterations_since_improvement = 0;
 
-        let learning_rate: f64 = 0.1;
+        let learning_rate: f64 = 0.2;
 
         let mut op_scores: Vec<u32> = vec![0; self.operators.len()];
         let mut op_attempts: Vec<u32> = vec![0; self.operators.len()];
 
-        let max_iterations = 25_000;
+        let max_iterations = 100_000;
 
         let mut temperature: f64 = 1.0;
         let final_temperature: f64 = 0.1;
@@ -265,6 +265,13 @@ impl Strategy for GeneralAdaptive {
                 iterations_since_improvement = 0;
             }
 
+            if iterations_since_improvement > 1_000 {
+                if let Some(solution) = problem.remove_moot_nodes(&incumbent_solution) {
+                    incumbent_solution = solution;
+                    incumbent_score = problem.calculate_score(&incumbent_solution)
+                        .expect("remove moot nodes destroyed something..");
+                }
+            }
             
             if iterations_since_improvement > 10_000 {
                 break;

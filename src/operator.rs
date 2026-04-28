@@ -303,3 +303,4 @@ impl Operator for SwapTrucks {
         return Some(Solution::new(new_truck_path, solution.flights.clone()));
     }
 }
+
