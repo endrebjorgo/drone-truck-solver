@@ -189,7 +189,11 @@ impl Operator for ScoochLaunchAndLanding {
                 match j {
                     0 => {
                         new_flights = solution.flights.clone();
-                        new_flights[i].start = start_idx - 1;
+                        new_flights[i].start = if start_idx != 0 {
+                            start_idx - 1
+                        } else {
+                            0
+                        };
                         neighborhood.push(
                             Solution::new(solution.truck_path.clone(), new_flights)
                         );
@@ -241,7 +245,11 @@ impl Operator for ScoochLaunchAndLanding {
         match j {
             0 => {
                 new_flights = solution.flights.clone();
-                new_flights[i].start = start_idx - 1;
+                new_flights[i].start = if start_idx != 0 {
+                    start_idx - 1
+                } else {
+                    0
+                };
                 return Some(Solution::new(solution.truck_path.clone(), new_flights));
             },
             1 => {
