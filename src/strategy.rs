@@ -70,9 +70,9 @@ impl Strategy for LocalSearch {
         let weighted_dist = WeightedIndex::new(&self.weights)
             .expect("no weights");
 
-        let mut best_solution = problem.generate_initial_solution(); 
+        let mut best_solution = problem.generate_with_heuristic(); 
         let mut best_score = problem.calculate_score(&best_solution)
-            .expect("ERROR: initial solution unexpectedly unvalid");
+            .expect("ERROR: heuristic solution unexpectedly invalid");
 
         for _ in 0..10_000 {
             let op_idx = weighted_dist.sample(&mut self.rng);
@@ -124,9 +124,9 @@ impl Strategy for SimulatedAnnealing {
         let weighted_dist = WeightedIndex::new(&self.weights)
             .expect("no weights");
 
-        let mut best_solution = problem.generate_initial_solution(); 
+        let mut best_solution = problem.generate_with_heuristic(); 
         let mut best_score = problem.calculate_score(&best_solution)
-            .expect("ERROR: initial solution unexpectedly unvalid");
+            .expect("ERROR: heuristic solution unexpectedly invalid");
 
         let mut incumbent_solution = best_solution.clone();
         let mut incumbent_score = best_score;

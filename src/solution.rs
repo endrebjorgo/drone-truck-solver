@@ -30,6 +30,9 @@ impl Solution {
         let (flights1, flights2) = self.split_flights()
             .expect("tried to generate submission format of invalid solution");
 
+        println!("{:?}", flights1);
+        println!("{:?}", flights2);
+
         let part2_1 = flights1.iter().map(|x| x.goal.to_string());
         let part2_2 = flights2.iter().map(|x| x.goal.to_string());
 
@@ -131,13 +134,10 @@ impl Solution {
         let mut flights2 = Vec::new();
 
         for curr in self.sorted_flights() {
-            // NOTE: assumes that flights are valid, i.e. start comes before end
-            // if current flight overlaps with previous flight1, push to flights2
-
             let overlaps_flights1 = flights1.iter().any(|prev|
                 self.flights_overlap(&curr, prev));
 
-            let overlaps_flights2 = flights1.iter().any(|prev|
+            let overlaps_flights2 = flights2.iter().any(|prev|
                 self.flights_overlap(&curr, prev));
 
             if !overlaps_flights1 {
@@ -157,21 +157,9 @@ impl Solution {
 
         let start1 = index_lookup[flight1.start];
         let start2 = index_lookup[flight2.start];
+        let end1 = index_lookup[flight1.end];
+        let end2 = index_lookup[flight2.end];
 
-        // NOTE: if node 0 is at the end, then we must take the last element...
-        // works for now
-        let end1 = if flight1.end == 0 {
-            *index_lookup.last().unwrap()
-        } else {
-            index_lookup[flight1.end]
-        };
-
-        let end2 = if flight2.end == 0 {
-            *index_lookup.last().unwrap()
-        } else {
-            index_lookup[flight2.end]
-        };
-
-        return start1 < end2 || end1 > start2; 
+        return start1 < end2 && start2 < end1; 
     }
 }

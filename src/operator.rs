@@ -13,11 +13,19 @@ impl Operator for OneInsert {
     fn generate_neighborhood(&self, solution: &Solution) -> Vec<Solution> {
         let mut neighborhood: Vec<Solution> = Vec::new();
 
+        if solution.truck_path.len() < 4 {
+            return neighborhood;
+        }
+
         let n = solution.truck_path.len() + solution.flights.len();
 
         for i in 1..n {
             for j in 1..n {
-                if i == solution.truck_path.len() {
+                if i + 1 == solution.truck_path.len() {
+                    continue;
+                }
+
+                if i + 2 == solution.truck_path.len() {
                     continue;
                 }
 
@@ -60,11 +68,15 @@ impl Operator for OneInsert {
     fn get_random_neighbor(&self, solution: &Solution, rng: &mut dyn Rng) -> Option<Solution> {
         let n = solution.truck_path.len() + solution.flights.len();
 
+        if solution.truck_path.len() < 4 {
+            return None;
+        }
+
         let mut i = rng.random_range(1..n);
         let mut j = rng.random_range(1..n);
 
         // reroll if invalid random value
-        while i == solution.truck_path.len() {
+        while i + 1 == solution.truck_path.len() || i + 2 == solution.truck_path.len() {
             i = rng.random_range(1..n)
         }
 
@@ -91,7 +103,7 @@ impl Operator for OneInsert {
                     end: solution.truck_path[i + 1],
                 });
             } else {
-                new_flights.insert(j, solution.flights[i].clone());
+                new_flights.insert(j - solution.truck_path.len(), solution.flights[i - solution.truck_path.len()].clone());
             }
         }
 
