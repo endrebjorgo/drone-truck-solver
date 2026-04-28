@@ -1,7 +1,7 @@
-use drone_truck_solver::operator::{OneInsert, DeployDrone, ScoochLaunchAndLanding};
+use drone_truck_solver::operator::{ScoochLaunchAndLanding};
 use drone_truck_solver::problem::Problem;
 use drone_truck_solver::solver::Solver;
-use drone_truck_solver::strategy::{LocalSearch, SimulatedAnnealing};
+use drone_truck_solver::strategy::{SimulatedAnnealing};
 
 use rand::SeedableRng;
 use rand::rngs::SmallRng;
