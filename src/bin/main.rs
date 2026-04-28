@@ -1,7 +1,7 @@
-use drone_truck_solver::operator::{ScoochLaunchAndLanding};
+use drone_truck_solver::operator::{ScoochLaunchAndLanding, SwapTrucks, OneInsert, DeployDrone};
 use drone_truck_solver::problem::Problem;
 use drone_truck_solver::solver::Solver;
-use drone_truck_solver::strategy::{SimulatedAnnealing};
+use drone_truck_solver::strategy::{GeneralAdaptive};
 
 use rand::SeedableRng;
 use rand::rngs::SmallRng;
@@ -16,12 +16,12 @@ fn main() {
 
         let problem = Problem::from_file(&input_path);
 
-        let heur = problem.generate_with_heuristic();
-        println!("{:?}", heur.to_submission_format());
-
         let mut solver = Solver {
-            strategy: SimulatedAnnealing::new(SmallRng::seed_from_u64(RNG_SEED))
-                .add_operator(ScoochLaunchAndLanding, 1)
+            strategy: GeneralAdaptive::new(SmallRng::seed_from_u64(RNG_SEED))
+                .add_operator(DeployDrone, 1.0)
+                .add_operator(OneInsert, 1.0)
+                .add_operator(ScoochLaunchAndLanding, 1.0)
+                .add_operator(SwapTrucks, 1.0)
         };
 
         let (solution, score) = solver.solve(&problem);

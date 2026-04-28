@@ -2,7 +2,7 @@ use crate::operator::{OneInsert, DeployDrone, SwapTrucks, ScoochLaunchAndLanding
 use crate::problem::Problem;
 use crate::solution::Solution;
 use crate::solver::Solver;
-use crate::strategy::{LocalSearch, RandomSearch, SimulatedAnnealing, Strategy};
+use crate::strategy::{LocalSearch, RandomSearch, SimulatedAnnealing, Strategy, GeneralAdaptive};
 
 use std::time::Instant;
 use rand::rngs::SmallRng;
@@ -31,6 +31,7 @@ impl InstanceReport {
 
         let problem = Problem::from_file(instance_path);
 
+        /*
         let mut random_solver = Solver { 
             strategy: RandomSearch::new(SmallRng::seed_from_u64(RNG_SEED)) 
         };
@@ -73,6 +74,18 @@ impl InstanceReport {
 
         instance_report.strategy_reports
             .push(StrategyReport::generate(&mut sim_annealing_solver_multi_w, &problem));
+        */
+
+        let mut general_solver = Solver {
+            strategy: GeneralAdaptive::new(SmallRng::seed_from_u64(RNG_SEED))
+                .add_operator(DeployDrone, 1.0)
+                .add_operator(OneInsert, 1.0)
+                .add_operator(ScoochLaunchAndLanding, 1.0)
+                .add_operator(SwapTrucks, 1.0)
+        };
+
+        instance_report.strategy_reports
+            .push(StrategyReport::generate(&mut general_solver, &problem));
 
         return instance_report;
     }    
