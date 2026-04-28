@@ -1,4 +1,4 @@
-use drone_truck_solver::operator::{OneInsert, DeployDrone};
+use drone_truck_solver::operator::{OneInsert, DeployDrone, ScoochLaunchAndLanding};
 use drone_truck_solver::problem::Problem;
 use drone_truck_solver::solver::Solver;
 use drone_truck_solver::strategy::{LocalSearch, SimulatedAnnealing};
@@ -17,26 +17,17 @@ fn main() {
         let problem = Problem::from_file(&input_path);
 
         let heur = problem.generate_with_heuristic();
-        println!("{:?}", heur);
-        let ting = heur.split_flights();
-        println!("{:?}", ting);
-
-        let score = problem.calculate_score(&heur).expect("heuristic should produce feasible!");
-        println!("Score: {}", score);
-    /*
+        println!("{:?}", heur.to_submission_format());
 
         let mut solver = Solver {
             strategy: SimulatedAnnealing::new(SmallRng::seed_from_u64(RNG_SEED))
-                .add_operator(DeployDrone, 1)
-                .add_operator(OneInsert, 1),
+                .add_operator(ScoochLaunchAndLanding, 1)
         };
 
         let (solution, score) = solver.solve(&problem);
 
-        println!("{:?}", solution);
         println!("Best solution: {:?}", solution.to_submission_format());
         println!("Objective: {:.2}", score as f64 / 100.0);
-    */
     } else {
         panic!("pass the input file as argument");
     }

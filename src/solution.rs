@@ -30,9 +30,6 @@ impl Solution {
         let (flights1, flights2) = self.split_flights()
             .expect("tried to generate submission format of invalid solution");
 
-        println!("{:?}", flights1);
-        println!("{:?}", flights2);
-
         let part2_1 = flights1.iter().map(|x| x.goal.to_string());
         let part2_2 = flights2.iter().map(|x| x.goal.to_string());
 

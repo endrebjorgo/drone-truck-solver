@@ -197,36 +197,28 @@ impl Operator for ScoochLaunchAndLanding {
             let start_idx = index_lookup[solution.flights[i].start];
             let end_idx = index_lookup[solution.flights[i].end];
             
-            for j in 0..4 {
+            for j in 0..2 {
                 match j {
                     0 => {
+                        if start_idx == 0 {
+                            continue;
+                        }
+
                         new_flights = solution.flights.clone();
-                        new_flights[i].start = if start_idx != 0 {
-                            start_idx - 1
-                        } else {
-                            0
-                        };
+                        new_flights[i].start = solution.truck_path[start_idx - 1];
+
                         neighborhood.push(
                             Solution::new(solution.truck_path.clone(), new_flights)
                         );
                     },
                     1 => {
+                        if solution.truck_path[end_idx + 1] == 0 {
+                            continue;
+                        }
+
                         new_flights = solution.flights.clone();
-                        new_flights[i].start = start_idx + 1;
-                        neighborhood.push(
-                            Solution::new(solution.truck_path.clone(), new_flights)
-                        );
-                    },
-                    2 => {
-                        new_flights = solution.flights.clone();
-                        new_flights[i].end = end_idx - 1;
-                        neighborhood.push(
-                            Solution::new(solution.truck_path.clone(), new_flights)
-                        );
-                    },
-                    3 => {
-                        new_flights = solution.flights.clone();
-                        new_flights[i].end = end_idx + 1;
+                        new_flights[i].end = solution.truck_path[end_idx + 1];
+
                         neighborhood.push(
                             Solution::new(solution.truck_path.clone(), new_flights)
                         );
@@ -247,7 +239,7 @@ impl Operator for ScoochLaunchAndLanding {
         let index_lookup = solution.generate_truck_path_index_lookup();
 
         let i = rng.random_range(0..solution.flights.len());
-        let j = rng.random_range(0..4);
+        let j = rng.random_range(0..2);
 
         let mut new_flights;
 
@@ -256,27 +248,23 @@ impl Operator for ScoochLaunchAndLanding {
 
         match j {
             0 => {
+                if start_idx == 0 {
+                    return None;
+                }
+
                 new_flights = solution.flights.clone();
-                new_flights[i].start = if start_idx != 0 {
-                    start_idx - 1
-                } else {
-                    0
-                };
+                new_flights[i].start = solution.truck_path[start_idx - 1];
+
                 return Some(Solution::new(solution.truck_path.clone(), new_flights));
             },
             1 => {
+                if solution.truck_path[end_idx + 1] == 0 {
+                    return None;
+                }
+
                 new_flights = solution.flights.clone();
-                new_flights[i].start = start_idx + 1;
-                return Some(Solution::new(solution.truck_path.clone(), new_flights));
-            },
-            2 => {
-                new_flights = solution.flights.clone();
-                new_flights[i].end = end_idx - 1;
-                return Some(Solution::new(solution.truck_path.clone(), new_flights));
-            },
-            3 => {
-                new_flights = solution.flights.clone();
-                new_flights[i].end = end_idx + 1;
+                new_flights[i].end = solution.truck_path[end_idx + 1];
+
                 return Some(Solution::new(solution.truck_path.clone(), new_flights));
             },
             _ => unimplemented!(),

@@ -136,7 +136,7 @@ impl Problem {
                 goal: curr,
                 end: next
             });
-            i += 2;
+            i += 1;
         }
 
         return Solution::new(truck_path, flights);

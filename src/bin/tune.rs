@@ -22,20 +22,21 @@ fn main() {
         let mut best_score = problem.calculate_score(&best_solution).unwrap();
         let mut best_weights = (0, 0, 0);
         
-        for i in 0..=100 {
-            for j in 0..=(100-i) {
+        for i in 0..=20 {
+            for j in 0..=(20-i) {
+                let k = (20 - i - j);
                 solver = Solver {
                     strategy: SimulatedAnnealing::new(SmallRng::seed_from_u64(RNG_SEED))
-                        .add_operator(ScoochLaunchAndLanding, i as u32)
-                        .add_operator(DeployDrone, j as u32)
-                        .add_operator(SwapTrucks, 100 - i - j),
+                        .add_operator(ScoochLaunchAndLanding, i * 5)
+                        .add_operator(DeployDrone, j * 5)
+                        .add_operator(SwapTrucks, k * 5),
                 };
 
                 let (new_solution, new_score) = solver.solve(&problem);
                 if new_score < best_score {
                     best_solution = new_solution;
                     best_score = new_score;
-                    best_weights = (i, j, 100 - i - j);
+                    best_weights = (i*5, j*5, k*5);
                 }
             }
         }

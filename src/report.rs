@@ -67,8 +67,8 @@ impl InstanceReport {
         let mut sim_annealing_solver_multi_w = Solver {
             strategy: SimulatedAnnealing::new(SmallRng::seed_from_u64(RNG_SEED))
                 .add_operator(ScoochLaunchAndLanding, 5)
-                .add_operator(DeployDrone, 15)
-                .add_operator(SwapTrucks, 80)
+                .add_operator(DeployDrone, 30)
+                .add_operator(SwapTrucks, 65)
         };
 
         instance_report.strategy_reports
