@@ -234,19 +234,19 @@ impl Strategy for GeneralAdaptive {
 
         let mut iterations_since_improvement = 0;
 
-        let learning_rate: f64 = 0.2;
+        let learning_rate: f64 = 0.7;
 
         let mut op_scores: Vec<u32> = vec![0; self.operators.len()];
         let mut op_attempts: Vec<u32> = vec![0; self.operators.len()];
 
-        let max_iterations = 100_000;
+        let max_iterations = 10_000;
 
-        let mut temperature: f64 = 1.0;
+        let mut temperature: f64 = 5.0;
         let final_temperature: f64 = 0.1;
         let alpha = (final_temperature / temperature).powf(1.0 / (max_iterations as f64));
 
         for iteration in 0..max_iterations {
-            if iterations_since_improvement > 500 {
+            if iterations_since_improvement > 50 {
                 let mut perturbed_solution = incumbent_solution.clone();
                 let mut perturbed_score = incumbent_score;
 
@@ -265,12 +265,13 @@ impl Strategy for GeneralAdaptive {
                 iterations_since_improvement = 0;
             }
 
-            if iterations_since_improvement > 1_000 {
+            if iterations_since_improvement > 100 {
                 if let Some(solution) = problem.remove_moot_nodes(&incumbent_solution) {
                     incumbent_solution = solution;
                     incumbent_score = problem.calculate_score(&incumbent_solution)
                         .expect("remove moot nodes destroyed something..");
                 }
+                iterations_since_improvement = 0;
             }
             
             if iterations_since_improvement > 10_000 {
@@ -281,7 +282,6 @@ impl Strategy for GeneralAdaptive {
                 // Update weights based on scores
                 for i in 0..self.weights.len() {
                     if op_attempts[i] != 0 {
-                        //println!("New weights: {:?}", self.weights);
                         self.weights[i] = self.weights[i] * (1.0 - learning_rate);
                         self.weights[i] += learning_rate * op_scores[i] as f64 / op_attempts[i] as f64;
                     }
@@ -329,8 +329,6 @@ impl Strategy for GeneralAdaptive {
             iterations_since_improvement += 1;
             temperature *= alpha;
         }
-
-        println!("End weights: {:?}", self.weights);
 
         return (best_solution, best_score);
     }

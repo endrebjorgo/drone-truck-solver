@@ -31,7 +31,6 @@ impl InstanceReport {
 
         let problem = Problem::from_file(instance_path);
 
-        /*
         let mut random_solver = Solver { 
             strategy: RandomSearch::new(SmallRng::seed_from_u64(RNG_SEED)) 
         };
@@ -74,7 +73,6 @@ impl InstanceReport {
 
         instance_report.strategy_reports
             .push(StrategyReport::generate(&mut sim_annealing_solver_multi_w, &problem));
-        */
 
         let mut general_solver = Solver {
             strategy: GeneralAdaptive::new(SmallRng::seed_from_u64(RNG_SEED))
