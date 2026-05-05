@@ -1,34 +1,56 @@
 use drone_truck_solver::operator::{ScoochLaunchAndLanding, SwapTrucks, OneInsert, DeployDrone};
 use drone_truck_solver::problem::Problem;
 use drone_truck_solver::solver::Solver;
-use drone_truck_solver::strategy::{GeneralAdaptive};
+use drone_truck_solver::strategy::{FinalStrategy};
 
+use std::path::PathBuf;
+use std::time::{Duration, Instant};
+use rayon::prelude::*;
 use rand::SeedableRng;
 use rand::rngs::SmallRng;
 
 const RNG_SEED: u64 = 1337;
+const INSTANCE_DIRECTORY: &'static str = "./assets";
 
 fn main() {
-    if let Some(input_path) = std::env::args().nth(1) {
-        if std::fs::exists(&input_path).is_err() {
-            panic!("waaaa");
-        }
+    let deadline = Instant::now() + Duration::from_secs(60);
 
-        let problem = Problem::from_file(&input_path);
+    let instance_dir = std::fs::read_dir(INSTANCE_DIRECTORY)
+        .expect("unable to find directory");
 
-        let mut solver = Solver {
-            strategy: GeneralAdaptive::new(SmallRng::seed_from_u64(RNG_SEED))
-                .add_operator(DeployDrone, 1.0)
-                .add_operator(OneInsert, 1.0)
-                .add_operator(ScoochLaunchAndLanding, 1.0)
-                .add_operator(SwapTrucks, 1.0)
-        };
+    let instances: Vec<PathBuf> = instance_dir
+        .map(|f| f.unwrap().path())
+        .collect();
 
-        let (solution, score) = solver.solve(&problem);
+    if instances.len() > 8 {
+        panic!("unable to process more than 8 instances in parallell");
+    }
 
-        println!("Best solution: {:?}", solution.to_submission_format());
-        println!("Objective: {:.2}", score as f64 / 100.0);
-    } else {
-        panic!("pass the input file as argument");
+    rayon::ThreadPoolBuilder::new()
+        .num_threads(instances.len())
+        .build_global()
+        .expect("unable to build thread pool");
+
+    let problems: Vec<Problem> = instances
+        .iter()
+        .map(|instance| Problem::from_file(instance.to_str().unwrap()))
+        .collect();
+
+    let results: Vec<_> = problems
+        .par_iter()
+        .map(|problem| 
+            Solver {
+                strategy: FinalStrategy::new(SmallRng::seed_from_u64(RNG_SEED), deadline)
+                    .add_operator(DeployDrone, 1.0)
+                    .add_operator(OneInsert, 1.0)
+                    .add_operator(ScoochLaunchAndLanding, 1.0)
+                    .add_operator(SwapTrucks, 1.0)
+            }.solve(&problem).1
+        ).collect();
+
+    let norm_results: Vec<f64> = results.iter().map(|&r| r as f64 / 100.0).collect();
+
+    for i in 0..instances.len() {
+        println!("{}: {}", instances[i].to_str().unwrap(), norm_results[i]);
     }
 }
