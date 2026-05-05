@@ -116,30 +116,29 @@ impl Solution {
         return true;
     }
 
-    pub fn sorted_flights(&self) -> Vec<Flight> {
+    pub fn split_flights(&self) -> Result<(Vec<Flight>, Vec<Flight>), &str> {
         let index_lookup = self.generate_truck_path_index_lookup();
-
         let mut flights = self.flights.clone();
         flights.sort_by_key(|x| index_lookup[x.start]);
-
-        return flights;
-    }
-
-    pub fn split_flights(&self) -> Result<(Vec<Flight>, Vec<Flight>), &str> {
-        // NOTE: should be adapted for more drones
+        
         let mut flights1 = Vec::new();
         let mut flights2 = Vec::new();
 
-        for curr in self.sorted_flights() {
-            let overlaps_flights1 = flights1.iter().any(|prev|
-                self.flights_overlap(&curr, prev));
+        for curr in flights {
+            let curr_start = index_lookup[curr.start];
 
-            let overlaps_flights2 = flights2.iter().any(|prev|
-                self.flights_overlap(&curr, prev));
+            let overlaps1 = flights1.last()
+                .map_or(false, |last: &Flight| curr_start < index_lookup[last.end]);
 
-            if !overlaps_flights1 {
+            if !overlaps1 {
                 flights1.push(curr.clone());
-            } else if !overlaps_flights2 {
+                continue;
+            }
+
+            let overlaps2 = flights2.last()
+                .map_or(false, |last: &Flight| curr_start < index_lookup[last.end]);
+
+            if !overlaps2 {
                 flights2.push(curr.clone());
             } else {
                 return Err("cannot split flights without overlap");
@@ -147,16 +146,5 @@ impl Solution {
         }
 
         return Ok((flights1, flights2));
-    }
-
-    fn flights_overlap(&self, flight1: &Flight, flight2: &Flight) -> bool {
-        let index_lookup = self.generate_truck_path_index_lookup();
-
-        let start1 = index_lookup[flight1.start];
-        let start2 = index_lookup[flight2.start];
-        let end1 = index_lookup[flight1.end];
-        let end2 = index_lookup[flight2.end];
-
-        return start1 < end2 && start2 < end1; 
     }
 }
