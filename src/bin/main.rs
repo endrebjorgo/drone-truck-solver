@@ -1,7 +1,7 @@
-use drone_truck_solver::operator::{ScoochLaunchAndLanding, SwapTrucks, OneInsert, DeployDrone};
+use drone_truck_solver::operator::{DeployDrone, OneInsert, ScoochLaunchAndLanding, SwapTrucks, TwoOpt};
 use drone_truck_solver::problem::Problem;
 use drone_truck_solver::solver::Solver;
-use drone_truck_solver::strategy::{FinalStrategy};
+use drone_truck_solver::strategy::{TimedAdaptive};
 
 use std::path::PathBuf;
 use std::time::{Duration, Instant};
@@ -13,7 +13,7 @@ const RNG_SEED: u64 = 1337;
 const INSTANCE_DIRECTORY: &'static str = "./assets";
 
 fn main() {
-    let deadline = Instant::now() + Duration::from_secs(60);
+    let deadline = Instant::now() + Duration::from_secs(10);
 
     let instance_dir = std::fs::read_dir(INSTANCE_DIRECTORY)
         .expect("unable to find directory");
@@ -40,11 +40,12 @@ fn main() {
         .par_iter()
         .map(|problem| 
             Solver {
-                strategy: FinalStrategy::new(SmallRng::seed_from_u64(RNG_SEED), deadline)
+                strategy: TimedAdaptive::new(SmallRng::seed_from_u64(RNG_SEED), deadline)
                     .add_operator(DeployDrone, 1.0)
                     .add_operator(OneInsert, 1.0)
                     .add_operator(ScoochLaunchAndLanding, 1.0)
                     .add_operator(SwapTrucks, 1.0)
+                    .add_operator(TwoOpt, 1.0)
             }.solve(&problem).1
         ).collect();
 

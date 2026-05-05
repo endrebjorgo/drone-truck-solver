@@ -48,7 +48,7 @@ impl super::Strategy for TimedAdaptive {
         let mut op_scores: Vec<u32> = vec![0; self.operators.len()];
         let mut op_attempts: Vec<u32> = vec![0; self.operators.len()];
 
-        let mut temperature = 5.0;
+        let mut temperature = 10.0;
         let alpha = 0.99999;
         let mut iteration = 0;
 
