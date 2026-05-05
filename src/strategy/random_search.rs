@@ -4,7 +4,7 @@ use crate::solution::Solution;
 use rand::Rng;
 
 pub struct RandomSearch {
-    rng: Box<dyn Rng>,
+    pub rng: Box<dyn Rng>,
 }
 
 impl RandomSearch {

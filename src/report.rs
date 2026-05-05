@@ -1,10 +1,10 @@
-use crate::operator::{OneInsert, DeployDrone, SwapTrucks, ScoochLaunchAndLanding};
+use crate::operator::{OneInsert, DeployDrone, SwapTrucks, ScoochLaunchAndLanding, TwoOpt, ThreeOpt};
 use crate::problem::Problem;
 use crate::solution::Solution;
 use crate::solver::Solver;
-use crate::strategy::{LocalSearch, RandomSearch, SimulatedAnnealing, Strategy, GeneralAdaptive};
+use crate::strategy::{LocalSearch, RandomSearch, SimulatedAnnealing, Strategy, GeneralAdaptive, TimedAdaptive};
 
-use std::time::Instant;
+use std::time::{Duration, Instant};
 use rand::rngs::SmallRng;
 use rand::SeedableRng;
 
@@ -30,6 +30,29 @@ impl InstanceReport {
         };
 
         let problem = Problem::from_file(instance_path);
+  
+        let mut final_solver = Solver { 
+            strategy: RandomSearch::new(SmallRng::seed_from_u64(RNG_SEED)) 
+        };
+
+        let rng = SmallRng::seed_from_u64(RNG_SEED);
+        let deadline = Instant::now() + Duration::from_secs(20);
+        let alpha = 0.99999;
+        let temperature = 10.0;
+        let learning_rate = 0.7;
+        let mut final_solver = Solver {
+            strategy: TimedAdaptive::new(rng, deadline, alpha, temperature, learning_rate)
+                .add_operator(DeployDrone, 1.0)
+                .add_operator(OneInsert, 1.0)
+                .add_operator(ScoochLaunchAndLanding, 1.0)
+                .add_operator(SwapTrucks, 1.0)
+                .add_operator(TwoOpt, 1.0)
+                .add_operator(ThreeOpt, 1.0)
+        };
+
+        /*
+        instance_report.strategy_reports
+            .push(StrategyReport::generate(&mut final_solver, &problem));
 
         let mut random_solver = Solver { 
             strategy: RandomSearch::new(SmallRng::seed_from_u64(RNG_SEED)) 
@@ -40,7 +63,7 @@ impl InstanceReport {
 
         let mut local_solver = Solver { 
             strategy: LocalSearch::new(SmallRng::seed_from_u64(RNG_SEED))
-                .add_operator(OneInsert, 1)
+                .add_operator(TwoOpt, 1)
         };
 
         instance_report.strategy_reports
@@ -77,13 +100,15 @@ impl InstanceReport {
         let mut general_solver = Solver {
             strategy: GeneralAdaptive::new(SmallRng::seed_from_u64(RNG_SEED))
                 .add_operator(DeployDrone, 1.0)
-                .add_operator(OneInsert, 1.0)
                 .add_operator(ScoochLaunchAndLanding, 1.0)
                 .add_operator(SwapTrucks, 1.0)
+                .add_operator(TwoOpt, 1.0)
+                .add_operator(ThreeOpt, 1.0)
         };
 
         instance_report.strategy_reports
             .push(StrategyReport::generate(&mut general_solver, &problem));
+        */
 
         return instance_report;
     }    

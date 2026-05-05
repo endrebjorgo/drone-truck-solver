@@ -7,9 +7,9 @@ use rand::distr::Distribution;
 use rand::distr::weighted::WeightedIndex;
 
 pub struct GeneralAdaptive {
-    rng: Box<dyn Rng>,
-    operators: Vec<Box<dyn Operator>>,
-    weights: Vec<f64>,
+    pub rng: Box<dyn Rng>,
+    pub operators: Vec<Box<dyn Operator>>,
+    pub weights: Vec<f64>,
 }
 
 impl GeneralAdaptive {
@@ -71,7 +71,7 @@ impl super::Strategy for GeneralAdaptive {
             }
 
             if iterations_since_improvement > 100 {
-                if let Some(solution) = problem.remove_moot_nodes(&incumbent_solution) {
+                if let Some(solution) = problem.remove_moot_flights(&incumbent_solution) {
                     incumbent_solution = solution;
                     incumbent_score = problem.calculate_score(&incumbent_solution)
                         .expect("remove moot nodes destroyed something..");

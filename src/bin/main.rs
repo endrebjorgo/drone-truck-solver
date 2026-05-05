@@ -1,4 +1,4 @@
-use drone_truck_solver::operator::{DeployDrone, OneInsert, ScoochLaunchAndLanding, SwapTrucks, TwoOpt};
+use drone_truck_solver::operator::{DeployDrone, OneInsert, ScoochLaunchAndLanding, SwapTrucks, TwoOpt, ThreeOpt};
 use drone_truck_solver::problem::Problem;
 use drone_truck_solver::solver::Solver;
 use drone_truck_solver::strategy::{TimedAdaptive};
@@ -13,7 +13,7 @@ const RNG_SEED: u64 = 1337;
 const INSTANCE_DIRECTORY: &'static str = "./assets";
 
 fn main() {
-    let deadline = Instant::now() + Duration::from_secs(10);
+    let deadline = Instant::now() + Duration::from_secs(30);
 
     let instance_dir = std::fs::read_dir(INSTANCE_DIRECTORY)
         .expect("unable to find directory");
@@ -38,20 +38,27 @@ fn main() {
 
     let results: Vec<_> = problems
         .par_iter()
-        .map(|problem| 
+        .map(|problem| {
+            let rng = SmallRng::seed_from_u64(RNG_SEED);
+            let alpha = 0.99996;
+            let temperature = 5.0;
+            let learning_rate = 0.5;
             Solver {
-                strategy: TimedAdaptive::new(SmallRng::seed_from_u64(RNG_SEED), deadline)
+                strategy: TimedAdaptive::new(rng, deadline, alpha, temperature, learning_rate)
                     .add_operator(DeployDrone, 1.0)
                     .add_operator(OneInsert, 1.0)
                     .add_operator(ScoochLaunchAndLanding, 1.0)
                     .add_operator(SwapTrucks, 1.0)
                     .add_operator(TwoOpt, 1.0)
-            }.solve(&problem).1
-        ).collect();
+                    .add_operator(ThreeOpt, 1.0)
+            }.solve(&problem)
+        }).collect();
 
-    let norm_results: Vec<f64> = results.iter().map(|&r| r as f64 / 100.0).collect();
+
+    let norm_results: Vec<f64> = results.iter().map(|r| r.1 as f64 / 100.0).collect();
 
     for i in 0..instances.len() {
         println!("{}: {}", instances[i].to_str().unwrap(), norm_results[i]);
+        //println!("Best solution: {}", results[i].0.to_submission_format());
     }
 }

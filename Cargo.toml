@@ -15,3 +15,7 @@ path = "src/bin/benchmark.rs"
 name = "tune"
 path = "src/bin/tune.rs"
 
+[[bin]]
+name = "main2"
+path = "src/bin/main2.rs"
+

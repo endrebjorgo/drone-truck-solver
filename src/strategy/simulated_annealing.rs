@@ -7,9 +7,9 @@ use rand::distr::Distribution;
 use rand::distr::weighted::WeightedIndex;
 
 pub struct SimulatedAnnealing {
-    rng: Box<dyn Rng>,
-    operators: Vec<Box<dyn Operator>>,
-    weights: Vec<u32>,
+    pub rng: Box<dyn Rng>,
+    pub operators: Vec<Box<dyn Operator>>,
+    pub weights: Vec<u32>,
 }
 
 impl SimulatedAnnealing {

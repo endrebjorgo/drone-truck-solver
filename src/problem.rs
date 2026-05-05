@@ -142,6 +142,69 @@ impl Problem {
         return Solution::new(truck_path, flights);
     }
 
+    pub fn generate_with_random_heuristic(&self, rng: &mut impl rand::Rng) -> Solution {
+        let start_node = rng.random_range(1..=self.customer_count);
+
+        let mut truck_path: Vec<usize> = vec![start_node];
+        let mut flights: Vec<Flight> = Vec::new();
+
+        let mut unvisited: Vec<usize> = (0..=self.customer_count).collect();
+        let idx = unvisited.iter().position(|&x| x == start_node).unwrap();
+        unvisited.remove(idx);
+
+        while !unvisited.is_empty() {
+            let prev = *truck_path.last().unwrap();
+
+            let next = unvisited.iter()
+                .min_by_key(|&&node| self.truck_times.get(prev, node))
+                .copied()
+                .unwrap();
+
+            truck_path.push(next);
+            unvisited.retain(|&x| x != next);
+        }
+        let zero_idx = truck_path.iter().position(|&x| x == 0).unwrap();
+        truck_path.rotate_left(zero_idx);
+        truck_path.push(0);
+
+        let mut i = 1;
+        while i < truck_path.len() - 2 {
+            let prev = truck_path[i - 1];
+            let curr = truck_path[i];
+            let next = truck_path[i + 1];
+
+            let drone_time  = self.drone_times.get(prev, curr) + self.drone_times.get(curr, next);
+
+            if drone_time > self.flight_limit {
+                i += 1;
+                continue;
+            }
+
+            let old_truck_time = self.truck_times.get(prev, curr) + self.truck_times.get(prev, curr);
+            let new_truck_time = self.truck_times.get(prev, next);
+
+            if cmp::max(drone_time, new_truck_time) > self.flight_limit {
+                i += 1;
+                continue;
+            }
+
+            if cmp::max(drone_time, new_truck_time) > old_truck_time {
+                i += 1;
+                continue;
+            }
+
+            truck_path.remove(i);
+            flights.push(Flight {
+                start: prev,
+                goal: curr,
+                end: next
+            });
+            i += 1;
+        }
+
+        return Solution::new(truck_path, flights);
+    }
+
     pub fn generate_random_solution(&self, rng: &mut impl rand::Rng) -> Solution {
         let mut all_nodes: Vec<usize> = (1..=self.customer_count).collect();
         all_nodes.shuffle(rng);
@@ -319,7 +382,7 @@ impl Problem {
         return Some(total_time);
     }
 
-    pub fn remove_moot_nodes(&self, solution: &Solution) -> Option<Solution> {
+    pub fn remove_moot_flights(&self, solution: &Solution) -> Option<Solution> {
         let index_lookup = solution.generate_truck_path_index_lookup();
 
         let mut new_truck_path = solution.truck_path.clone();
