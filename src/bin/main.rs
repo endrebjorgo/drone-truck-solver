@@ -13,7 +13,7 @@ const RNG_SEED: u64 = 1337;
 const INSTANCE_DIRECTORY: &'static str = "./assets";
 
 fn main() {
-    let deadline = Instant::now() + Duration::from_secs(30);
+    let deadline = Instant::now() + Duration::from_secs(20);
 
     let instance_dir = std::fs::read_dir(INSTANCE_DIRECTORY)
         .expect("unable to find directory");
@@ -59,6 +59,7 @@ fn main() {
 
     for i in 0..instances.len() {
         println!("{}: {}", instances[i].to_str().unwrap(), norm_results[i]);
-        //println!("Best solution: {}", results[i].0.to_submission_format());
+        println!("Best solution: {}", results[i].0.to_submission_format());
+        println!();
     }
 }

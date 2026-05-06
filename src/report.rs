@@ -31,29 +31,6 @@ impl InstanceReport {
 
         let problem = Problem::from_file(instance_path);
   
-        let mut final_solver = Solver { 
-            strategy: RandomSearch::new(SmallRng::seed_from_u64(RNG_SEED)) 
-        };
-
-        let rng = SmallRng::seed_from_u64(RNG_SEED);
-        let deadline = Instant::now() + Duration::from_secs(20);
-        let alpha = 0.99999;
-        let temperature = 10.0;
-        let learning_rate = 0.7;
-        let mut final_solver = Solver {
-            strategy: TimedAdaptive::new(rng, deadline, alpha, temperature, learning_rate)
-                .add_operator(DeployDrone, 1.0)
-                .add_operator(OneInsert, 1.0)
-                .add_operator(ScoochLaunchAndLanding, 1.0)
-                .add_operator(SwapTrucks, 1.0)
-                .add_operator(TwoOpt, 1.0)
-                .add_operator(ThreeOpt, 1.0)
-        };
-
-        /*
-        instance_report.strategy_reports
-            .push(StrategyReport::generate(&mut final_solver, &problem));
-
         let mut random_solver = Solver { 
             strategy: RandomSearch::new(SmallRng::seed_from_u64(RNG_SEED)) 
         };
@@ -108,7 +85,25 @@ impl InstanceReport {
 
         instance_report.strategy_reports
             .push(StrategyReport::generate(&mut general_solver, &problem));
-        */
+
+        let rng = SmallRng::seed_from_u64(RNG_SEED);
+        let deadline = Instant::now() + Duration::from_secs(20);
+        let alpha = 0.99999;
+        let temperature = 10.0;
+        let learning_rate = 0.7;
+        let mut final_solver = Solver {
+            strategy: TimedAdaptive::new(rng, deadline, alpha, temperature, learning_rate)
+                .add_operator(DeployDrone, 1.0)
+                .add_operator(OneInsert, 1.0)
+                .add_operator(ScoochLaunchAndLanding, 1.0)
+                .add_operator(SwapTrucks, 1.0)
+                .add_operator(TwoOpt, 1.0)
+                .add_operator(ThreeOpt, 1.0)
+        };
+
+        instance_report.strategy_reports
+            .push(StrategyReport::generate(&mut final_solver, &problem));
+
 
         return instance_report;
     }    
