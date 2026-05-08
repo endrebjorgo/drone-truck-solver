@@ -45,6 +45,8 @@ impl TimedAdaptive {
 
 impl super::Strategy for TimedAdaptive {
     fn solve(&mut self, problem: &Problem) -> (Solution, u32) {
+        let starting_temp = self.temperature;
+
         let mut weighted_dist = WeightedIndex::new(&self.weights)
             .expect("no weights");
 
@@ -102,7 +104,7 @@ impl super::Strategy for TimedAdaptive {
                     }
                 }
 
-                for _ in 0..5 {
+                for _ in 0..3 {
                     let op_idx = self.rng.random_range(0..self.operators.len());
                     op_attempts[op_idx] += 1;
 
@@ -118,8 +120,12 @@ impl super::Strategy for TimedAdaptive {
                 }
             }
 
+            // really shake it 
+            if iterations_since_improvement > 200 {
+            }
+
             // generate all solutions instead of randomizing
-            if iterations_since_improvement > 100000 {
+            if iterations_since_improvement > 1000 {
                 let mut improved = false;
                 for (op_idx, op) in self.operators.iter().enumerate() {
                     op_attempts[op_idx] += 1;
@@ -136,6 +142,7 @@ impl super::Strategy for TimedAdaptive {
                         } 
                     }
                     if incumbent_score < best_score {
+                        println!("New best: {:.2}", best_score as f64 / 100.0);
                         best_solution = incumbent_solution.clone();
                         best_score = incumbent_score;
                         op_scores[op_idx] += found_best_score;
@@ -152,8 +159,25 @@ impl super::Strategy for TimedAdaptive {
                         incumbent_solution = new_start;
                         incumbent_score = new_start_score;
 
-                        self.temperature /= self.alpha.powi(iterations_since_improvement);
+
+
+                        self.temperature = starting_temp;
                         iterations_since_improvement = 0;
+                        //println!("Starting over...");
+                    }
+
+                    // shake things up
+                    for _ in 0..10 {
+                        let op_idx = self.rng.random_range(0..self.operators.len());
+
+                        if let Some(new_solution) = self.operators[op_idx]
+                            .get_random_neighbor(&incumbent_solution, &mut self.rng)
+                        {
+                            if let Some(new_score) = problem.calculate_score(&new_solution) {
+                                incumbent_solution = new_solution;
+                                incumbent_score = new_score;
+                            }
+                        }
                     }
                 }
             }
@@ -174,6 +198,7 @@ impl super::Strategy for TimedAdaptive {
                     op_scores[op_idx] += found_incumbent_score;
 
                     if incumbent_score < best_score {
+                        println!("New best: {:.2}", best_score as f64 / 100.0);
                         best_solution = incumbent_solution.clone();
                         best_score = incumbent_score;
 
@@ -182,6 +207,12 @@ impl super::Strategy for TimedAdaptive {
                     }
                 } else {
                     let p = 1.0 / ((new_score - incumbent_score) as f64 / self.temperature).exp();
+                    /*
+                    println!("Prob: {:.2}", p);
+                    println!("Delta: {}", new_score - incumbent_score);
+                    println!("Temp: {}", self.temperature);
+                    println!("Iter: {}", iteration);
+                    */
                     if self.rng.random::<f64>() < p {
                         incumbent_solution = new_solution.clone();
                         incumbent_score = new_score;
@@ -192,6 +223,7 @@ impl super::Strategy for TimedAdaptive {
             self.temperature *= self.alpha;
         }
 
+        //println!("{}", iteration);
         return (best_solution, best_score);
     }
 }

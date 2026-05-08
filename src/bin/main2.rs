@@ -14,8 +14,8 @@ fn main() {
     let problem = Problem::from_file("./assets/F_100.txt");
 
     let rng = SmallRng::seed_from_u64(RNG_SEED);
-    let alpha = 0.9999;
-    let temperature = 10.0;
+    let alpha = 0.999999;
+    let temperature = 50000.0;
     let learning_rate = 0.7;
 
     let mut solver = Solver {

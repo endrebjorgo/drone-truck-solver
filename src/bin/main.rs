@@ -13,7 +13,7 @@ const RNG_SEED: u64 = 1337;
 const INSTANCE_DIRECTORY: &'static str = "./assets";
 
 fn main() {
-    let deadline = Instant::now() + Duration::from_secs(20);
+    let deadline = Instant::now() + Duration::from_secs(60);
 
     let instance_dir = std::fs::read_dir(INSTANCE_DIRECTORY)
         .expect("unable to find directory");
@@ -40,8 +40,8 @@ fn main() {
         .par_iter()
         .map(|problem| {
             let rng = SmallRng::seed_from_u64(RNG_SEED);
-            let alpha = 0.99996;
-            let temperature = 5.0;
+            let alpha = 0.99999;
+            let temperature = 30000.0;
             let learning_rate = 0.5;
             Solver {
                 strategy: TimedAdaptive::new(rng, deadline, alpha, temperature, learning_rate)

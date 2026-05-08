@@ -86,11 +86,14 @@ impl Problem {
         Solution::new(truck_path, Vec::new())
     }
 
-    pub fn generate_with_heuristic(&self) -> Solution {
-        let mut truck_path: Vec<usize> = vec![0];
-        let mut flights: Vec<Flight> = Vec::new();
+    pub fn generate_nearest_neighbor(&self, start_node: usize) -> Solution {
+        assert!(start_node <= self.customer_count);
+        let mut truck_path: Vec<usize> = vec![start_node];
 
-        let mut unvisited: Vec<usize> = (1..=self.customer_count).collect();
+        let mut unvisited: Vec<usize> = (0..=self.customer_count).collect();
+        let idx = unvisited.iter().position(|&x| x == start_node).unwrap();
+        unvisited.remove(idx);
+
         while !unvisited.is_empty() {
             let prev = *truck_path.last().unwrap();
 
@@ -102,13 +105,21 @@ impl Problem {
             truck_path.push(next);
             unvisited.retain(|&x| x != next);
         }
+        let zero_idx = truck_path.iter().position(|&x| x == 0).unwrap();
+        truck_path.rotate_left(zero_idx);
         truck_path.push(0);
+        return Solution::new(truck_path, Vec::new());
+    }
+
+    pub fn generate_with_heuristic(&self) -> Solution {
+        let mut result = self.generate_nearest_neighbor(0);
 
         let mut i = 1;
-        while i < truck_path.len() - 2 {
-            let prev = truck_path[i - 1];
-            let curr = truck_path[i];
-            let next = truck_path[i + 1];
+
+        while i < result.truck_path.len() - 2 {
+            let prev = result.truck_path[i-1];
+            let curr = result.truck_path[i];
+            let next = result.truck_path[i+1];
 
             let drone_time  = self.drone_times.get(prev, curr) + self.drone_times.get(curr, next);
 
@@ -130,8 +141,8 @@ impl Problem {
                 continue;
             }
 
-            truck_path.remove(i);
-            flights.push(Flight {
+            result.truck_path.remove(i);
+            result.flights.push(Flight {
                 start: prev,
                 goal: curr,
                 end: next
@@ -139,7 +150,79 @@ impl Problem {
             i += 1;
         }
 
-        return Solution::new(truck_path, flights);
+        return result;
+    }
+
+    pub fn generate_with_heuristic2(&self) -> Solution {
+        let mut result = self.generate_nearest_neighbor(0);
+
+        let max_rate = 0.1;
+        let max_flights = (result.truck_path.len() as f64 * max_rate).round() as usize;
+
+        let mut flight_deltas: Vec<(usize, u32)> = (1..result.truck_path.len() - 2).map(|i| {
+            let prev = result.truck_path[i - 1];
+            let curr = result.truck_path[i];
+            let next = result.truck_path[i + 1];
+
+            let drone_time = self.drone_times.get(prev, curr) + self.drone_times.get(curr, next);
+
+            let old_truck_time = self.truck_times.get(prev, curr) + self.truck_times.get(prev, curr);
+            let new_truck_time = self.truck_times.get(prev, next);
+
+            if cmp::max(drone_time, new_truck_time) > self.flight_limit {
+                return (i, 0);
+            }
+
+            if cmp::max(drone_time, new_truck_time) > old_truck_time {
+                return (i, 0);
+            }
+
+            return (i, old_truck_time - cmp::max(drone_time, new_truck_time));
+        }).collect();
+
+        flight_deltas.retain(|x| x.1 != 0);
+        flight_deltas.sort_by_key(|f| f.1);
+        flight_deltas.reverse();
+        flight_deltas.truncate(max_flights);
+        println!("{:?}", flight_deltas);
+
+        let mut filtered_deltas = Vec::new();
+        for curr in flight_deltas {
+            let curr_start_idx = curr.0 - 1;
+            let curr_goal_idx = curr.0;
+            let curr_end_idx = curr.0 + 1;
+
+            let overlaps = filtered_deltas.iter().any(|prev: &(usize, u32)| {
+                let prev_start_idx = prev.0 - 1;
+                let prev_goal_idx = prev.0;
+                let prev_end_idx = prev.0 + 1;
+                !(prev_start_idx >= curr_end_idx || prev_end_idx <= curr_start_idx) ||
+                   curr_end_idx == prev_goal_idx || curr_start_idx == prev_goal_idx ||
+                   prev_end_idx == curr_goal_idx || prev_start_idx == curr_goal_idx
+            });
+            if !overlaps {
+                filtered_deltas.push(curr);
+            }
+        }
+        flight_deltas = filtered_deltas;
+        println!("{:?}", flight_deltas);
+
+        flight_deltas.sort_by_key(|f| f.0);
+        flight_deltas.reverse();
+
+        println!("{:?}", flight_deltas);
+
+        for delta in flight_deltas {
+            result.truck_path.remove(delta.0);
+            result.flights.push(Flight {
+                start: result.truck_path[delta.0 - 1],
+                goal: result.truck_path[delta.0],
+                end: result.truck_path[delta.0 + 1]
+            });
+        }
+        println!("{:?}", result.split_flights());
+
+        return result;
     }
 
     pub fn generate_with_random_heuristic(&self, rng: &mut impl rand::Rng) -> Solution {

@@ -76,6 +76,17 @@ impl Solution {
         return vec![part1, part2, part3, part4].join("|");
     }
 
+    pub fn ground_all_flights(&mut self) -> Self {
+        let mut result = self.clone();
+        for flight in &result.flights {
+            let lookup = result.generate_truck_path_index_lookup();
+            let new_idx = lookup[flight.start] + 1;
+            result.truck_path.insert(new_idx, flight.goal);
+        }
+        result.flights = Vec::new();
+        return result;
+    }
+
     pub fn generate_truck_path_index_lookup(&self) -> Vec<usize> {
         let lookup_length = self.truck_path.len() + self.flights.len();
         let mut index_lookup = vec![0; lookup_length];
